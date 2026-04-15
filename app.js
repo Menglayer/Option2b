@@ -117,18 +117,17 @@ function recalc() {
   renderAll(state);
 }
 
-// expose to inline handlers in HTML
-window.fetchAllData = fetchAllData;
-window.switchType = switchType;
-window.onLockTargetChange = onLockTargetChange;
-window.applyUserTargets = handleTargetsChange;
-window.recalc = recalc;
-window.calculateProfit = () => calculateProfit(state);
-window.toggleOracle = toggleOracle;
-window.sendOracleMsg = sendOracleMsg;
-
 document.addEventListener('DOMContentLoaded', () => {
   init();
+
+  // Buttons
+  document.getElementById('refreshBtn')?.addEventListener('click', fetchAllData);
+  document.getElementById('btnCall')?.addEventListener('click', () => switchType('CALL'));
+  document.getElementById('btnPut')?.addEventListener('click', () => switchType('PUT'));
+  document.getElementById('calcBtn')?.addEventListener('click', () => calculateProfit(state));
+  document.getElementById('oracleBtn')?.addEventListener('click', toggleOracle);
+  document.getElementById('oracleClose')?.addEventListener('click', toggleOracle);
+  document.getElementById('oracleSend')?.addEventListener('click', sendOracleMsg);
 
   const tDays = document.getElementById('targetDays');
   if (tDays) tDays.value = String(state.targetDays);
@@ -139,6 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   tDays?.addEventListener('change', handleTargetsChange);
   tPrice?.addEventListener('change', handleTargetsChange);
+  document.getElementById('notionalInput')?.addEventListener('change', recalc);
+  document.getElementById('lockTarget')?.addEventListener('change', onLockTargetChange);
 
   document.getElementById('oracleInput')?.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
