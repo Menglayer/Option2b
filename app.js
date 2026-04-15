@@ -18,11 +18,11 @@ function playEntrySplash() {
 
   setTimeout(() => {
     splash.classList.add('exit');
-  }, 1750);
+  }, 2300);
 
   setTimeout(() => {
     splash.remove();
-  }, 2600);
+  }, 3150);
 }
 
 async function init() {

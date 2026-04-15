@@ -49,6 +49,37 @@
   max-width: 860px;
 }
 
+.entry-metric-wrap {
+  margin: 4px auto 14px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  background: rgba(254, 242, 242, 0.75);
+  box-shadow: 0 14px 34px rgba(220, 38, 38, 0.12);
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+}
+
+.entry-metric-label {
+  font-size: 10px;
+  letter-spacing: .16em;
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.entry-metric-value {
+  font-size: clamp(28px, 5vw, 56px);
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #dc2626;
+  text-shadow: 0 6px 18px rgba(220, 38, 38, 0.2);
+}
+
 .entry-kicker {
   margin: 0 0 12px;
   font-size: 11px;
@@ -85,12 +116,18 @@
   animation: entryRise .6s cubic-bezier(.2,.8,.2,1) .05s forwards;
 }
 
+.entry-splash.play .entry-metric-wrap {
+  animation:
+    metricPop .75s cubic-bezier(.2,.85,.2,1) .14s forwards,
+    metricPulse 1s ease-in-out .95s 1;
+}
+
 .entry-splash.play .entry-title {
-  animation: entryRiseStrong .8s cubic-bezier(.2,.85,.2,1) .2s forwards;
+  animation: entryRiseStrong .82s cubic-bezier(.2,.85,.2,1) .62s forwards;
 }
 
 .entry-splash.play .entry-sub {
-  animation: entryRise .65s cubic-bezier(.2,.8,.2,1) .45s forwards;
+  animation: entryRise .65s cubic-bezier(.2,.8,.2,1) .92s forwards;
 }
 
 .entry-splash.exit {
@@ -106,6 +143,17 @@
   0% { opacity: 0; transform: translateY(14px) scale(.98); filter: blur(4px); }
   60% { opacity: 1; transform: translateY(0) scale(1.01); filter: blur(0); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes metricPop {
+  0% { opacity: 0; transform: translateY(10px) scale(.92); filter: blur(3px); }
+  65% { opacity: 1; transform: translateY(0) scale(1.03); filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes metricPulse {
+  0%, 100% { box-shadow: 0 14px 34px rgba(220, 38, 38, 0.12); }
+  50% { box-shadow: 0 22px 48px rgba(220, 38, 38, 0.2); }
 }
 
 @keyframes splashFadeOut {
