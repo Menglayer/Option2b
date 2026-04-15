@@ -9,12 +9,17 @@ import { toggleOracle, sendOracleMsg } from './src/features/oracle.js';
 function playEntrySplash() {
   const splash = document.getElementById('entrySplash');
   if (!splash) return;
+  const metricEl = document.getElementById('entryMetricValue');
 
   // 每次进入页面触发，若想每天只触发一次可改 localStorage 控制
   splash.classList.add('show');
   requestAnimationFrame(() => {
     splash.classList.add('play');
   });
+
+  if (metricEl) {
+    animateMetric(metricEl, -32.7, 1050);
+  }
 
   setTimeout(() => {
     splash.classList.add('exit');
@@ -23,6 +28,23 @@ function playEntrySplash() {
   setTimeout(() => {
     splash.remove();
   }, 3150);
+}
+
+function animateMetric(el, target, durationMs) {
+  const start = performance.now();
+  const from = -1.2;
+
+  const tick = now => {
+    const t = Math.min(1, (now - start) / durationMs);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const v = from + (target - from) * eased;
+    el.textContent = `${v.toFixed(1)}%`;
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    }
+  };
+
+  requestAnimationFrame(tick);
 }
 
 async function init() {
