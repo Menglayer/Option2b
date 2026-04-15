@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script type="module" crossorigin src="./assets/index-CWSyXw68.js"></script>
+  <script type="module" crossorigin src="./assets/index-Bd8yQIdq.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-DsRT3i68.css">
 </head>
 <body>
@@ -33,23 +33,23 @@
     <!-- Control Bar -->
     <section class="control-bar">
       <div class="control-left">
-        <button type="button" class="type-btn active" id="btnCall" onclick="switchType('CALL')">📈 CALL 看涨</button>
-        <button type="button" class="type-btn" id="btnPut" onclick="switchType('PUT')">📉 PUT 看跌</button>
+        <button type="button" class="type-btn active" id="btnCall">📈 CALL 看涨</button>
+        <button type="button" class="type-btn" id="btnPut">📉 PUT 看跌</button>
       </div>
       <div class="control-center">
         <label>本金 (USDT)</label>
-        <input type="number" id="notionalInput" value="1000" min="100" step="100" class="notional-input" onchange="recalc()" />
+        <input type="number" id="notionalInput" value="1000" min="100" step="100" class="notional-input" />
         <label>目标到期(天)</label>
-        <input type="number" id="targetDays" value="1" min="1" max="90" step="1" onchange="applyUserTargets()" />
+        <input type="number" id="targetDays" value="1" min="1" max="90" step="1" />
         <label>目标价格</label>
-        <input type="number" id="targetPrice" value="" min="1000" step="100" placeholder="可选" onchange="applyUserTargets()" />
+        <input type="number" id="targetPrice" value="" min="1000" step="100" placeholder="可选" />
         <label class="lock-toggle">
-          <input type="checkbox" id="lockTarget" onchange="onLockTargetChange()" />
+          <input type="checkbox" id="lockTarget" />
           <span>锁定目标</span>
         </label>
       </div>
       <div class="control-right">
-        <button type="button" class="refresh-btn" onclick="fetchAllData()" id="refreshBtn">🔄 刷新数据</button>
+        <button type="button" class="refresh-btn" id="refreshBtn">🔄 刷新数据</button>
         <span class="update-time" id="lastUpdate"></span>
       </div>
     </section>
@@ -157,7 +157,7 @@
             </div>
           </div>
         </div>
-        <button type="button" class="calc-btn" onclick="calculateProfit()">计算盈亏</button>
+        <button type="button" class="calc-btn" id="calcBtn">计算盈亏</button>
         <div id="calcResult" class="calc-result"></div>
       </section>
     </div>
@@ -230,16 +230,16 @@
   </div>
 
   <!-- Oracle Assistant -->
-  <button type="button" class="oracle-btn" id="oracleBtn" onclick="toggleOracle()">🤖</button>
+  <button type="button" class="oracle-btn" id="oracleBtn">🤖</button>
   <div class="oracle-drawer" id="oracleDrawer">
     <div class="oracle-header">
       <span class="oracle-title">🤖 Oracle 助手</span>
-      <button type="button" class="oracle-close" onclick="toggleOracle()">✕</button>
+      <button type="button" class="oracle-close" id="oracleClose">✕</button>
     </div>
     <div class="oracle-msgs" id="oracleMessages"></div>
     <div class="oracle-footer">
       <textarea class="oracle-input" id="oracleInput" placeholder="输入问题... (Enter 发送)" rows="2"></textarea>
-      <button type="button" class="oracle-send" onclick="sendOracleMsg()">发送</button>
+      <button type="button" class="oracle-send" id="oracleSend">发送</button>
     </div>
   </div>
 
