@@ -6,6 +6,25 @@ import { renderAll, showLoading, updatePriceDisplay } from './src/render.js';
 import { calculateProfit } from './src/features/calculator.js';
 import { toggleOracle, sendOracleMsg } from './src/features/oracle.js';
 
+function playEntrySplash() {
+  const splash = document.getElementById('entrySplash');
+  if (!splash) return;
+
+  // 每次进入页面触发，若想每天只触发一次可改 localStorage 控制
+  splash.classList.add('show');
+  requestAnimationFrame(() => {
+    splash.classList.add('play');
+  });
+
+  setTimeout(() => {
+    splash.classList.add('exit');
+  }, 1750);
+
+  setTimeout(() => {
+    splash.remove();
+  }, 2600);
+}
+
 async function init() {
   showLoading();
   try {
@@ -118,6 +137,7 @@ function recalc() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  playEntrySplash();
   init();
 
   // Buttons
