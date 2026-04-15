@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BTC Dual vs Options | Falcon Style</title>
+  <meta name="description" content="实时对比 BTC 双币理财与期权卖出收益，揭示交易所隐藏成本" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="apple-touch-icon" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-top">
+        <h1>BTC Dual vs Options</h1>
+        <div class="price-badge" id="priceBadge">
+          <span class="price-label">BTC</span>
+          <span class="price-value" id="livePrice">--</span>
+          <span class="price-change" id="priceChange"></span>
+        </div>
+      </div>
+      <p class="subtitle">Falcon-style light UI · Real-time comparison · Binance / Deribit / Coincall</p>
+    </header>
+
+    <!-- Control Bar -->
+    <section class="control-bar">
+      <div class="control-left">
+        <button type="button" class="type-btn active" id="btnCall" onclick="switchType('CALL')">📈 CALL 看涨</button>
+        <button type="button" class="type-btn" id="btnPut" onclick="switchType('PUT')">📉 PUT 看跌</button>
+      </div>
+      <div class="control-center">
+        <label>本金 (USDT)</label>
+        <input type="number" id="notionalInput" value="1000" min="100" step="100" class="notional-input" onchange="recalc()" />
+        <label>目标到期(天)</label>
+        <input type="number" id="targetDays" value="1" min="1" max="90" step="1" onchange="applyUserTargets()" />
+        <label>目标价格</label>
+        <input type="number" id="targetPrice" value="" min="1000" step="100" placeholder="可选" onchange="applyUserTargets()" />
+        <label class="lock-toggle">
+          <input type="checkbox" id="lockTarget" onchange="onLockTargetChange()" />
+          <span>锁定目标</span>
+        </label>
+      </div>
+      <div class="control-right">
+        <button type="button" class="refresh-btn" onclick="fetchAllData()" id="refreshBtn">🔄 刷新数据</button>
+        <span class="update-time" id="lastUpdate"></span>
+      </div>
+    </section>
+
+    <!-- Summary Cards -->
+    <section class="summary-row">
+      <div class="summary-card">
+        <div class="sc-icon">🏦</div>
+        <div class="sc-body">
+          <div class="sc-label">双币理财 APY</div>
+          <div class="sc-value blue" id="avgDualApr">--%</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="sc-icon">📊</div>
+        <div class="sc-body">
+          <div class="sc-label">期权市场 APY</div>
+          <div class="sc-value green" id="avgOptionApr">--%</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="sc-icon">💸</div>
+        <div class="sc-body">
+          <div class="sc-label">隐藏价差</div>
+          <div class="sc-value red" id="avgGap">--%</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="sc-icon">🎯</div>
+        <div class="sc-body">
+          <div class="sc-label">到期损失(折算)</div>
+          <div class="sc-value yellow" id="annualLoss">$--</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Table -->
+    <section class="panel main-table-panel">
+      <h2>💰 收益差距分析 <span class="table-hint" id="productCount"></span></h2>
+      <div class="table-wrapper scrollbar-thin">
+        <table id="mainTable">
+          <thead>
+            <tr>
+              <th>交易所</th>
+              <th>方向</th>
+              <th>执行价</th>
+              <th>距离</th>
+              <th>双币到期</th>
+              <th>期权到期</th>
+              <th>双币 APY</th>
+              <th>期权 APY</th>
+              <th>隐藏价差</th>
+              <th>到期损失 $</th>
+              <th>评级</th>
+            </tr>
+          </thead>
+          <tbody id="mainBody">
+            <tr><td colspan="11" class="loading-cell"><div class="skeleton-text">正在拉取实时数据...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Bottom Grid -->
+    <div class="grid-2col">
+
+      <!-- Options Market -->
+      <section class="panel">
+        <h2>📈 期权市场报价</h2>
+        <div class="table-wrapper scrollbar-thin">
+          <table id="optTable">
+            <thead>
+              <tr><th>交易所</th><th>方向</th><th>执行价</th><th>到期</th><th>Bid</th><th>Ask</th><th>Mid APY</th></tr>
+            </thead>
+            <tbody id="optBody">
+              <tr><td colspan="7" class="muted center">等待数据</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Calculator -->
+      <section class="panel calc-panel">
+        <h2>🧮 收益计算器</h2>
+        <div class="calc-grid">
+          <div class="calc-field">
+            <label>到期价格</label>
+            <div class="input-group">
+              <span class="input-prefix">$</span>
+              <input type="number" id="calcPrice" value="95000" step="100" />
+            </div>
+          </div>
+          <div class="calc-field">
+            <label>执行价</label>
+            <div class="input-group">
+              <span class="input-prefix">$</span>
+              <input type="number" id="calcStrike" value="100000" step="1000" />
+            </div>
+          </div>
+          <div class="calc-field">
+            <label>Premium %</label>
+            <div class="input-group">
+              <input type="number" id="calcPremium" value="3.5" step="0.1" />
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="calc-btn" onclick="calculateProfit()">计算盈亏</button>
+        <div id="calcResult" class="calc-result"></div>
+      </section>
+    </div>
+
+    <!-- Knowledge + Risk -->
+    <div class="grid-2col">
+
+      <section class="panel knowledge-panel">
+        <h2>📖 核心要点</h2>
+        <div class="kb-list">
+          <div class="kb-item">
+            <div class="kb-title">双币理财 = 卖期权的包装品</div>
+            <p>交易所从原始 premium 中扣留 <strong class="red-text">15~40%</strong> 作为隐藏费用。你拿到的收益率已经被打折了。</p>
+          </div>
+          <div class="kb-item">
+            <div class="kb-title">核心公式</div>
+            <code>真实收益 = 期权APY − 隐藏价差<br/>年化损失 = 本金 × 隐藏价差%</code>
+          </div>
+          <div class="kb-item">
+            <div class="kb-title">什么时候用 CALL？</div>
+            <p>震荡或温和看涨 → 卖出涨的权利 → 锁定上方收益，收取 premium</p>
+          </div>
+          <div class="kb-item">
+            <div class="kb-title">什么时候用 PUT？</div>
+            <p>震荡或温和看跌 → 卖出跌的权利 → 锁定下方入场价，低价接币</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel risk-panel">
+        <h2>⚠️ 风险提示</h2>
+        <div class="risk-list">
+          <div class="risk-item">
+            <span class="risk-icon">🔴</span>
+            <div>
+              <strong>转换风险</strong>
+              <p>价格穿过执行价 → 资产被按执行价强制转换</p>
+            </div>
+          </div>
+          <div class="risk-item">
+            <span class="risk-icon">🟡</span>
+            <div>
+              <strong>机会成本</strong>
+              <p>大涨时只拿到固定收益，错失超额涨幅</p>
+            </div>
+          </div>
+          <div class="risk-item">
+            <span class="risk-icon">🟠</span>
+            <div>
+              <strong>对手方风险</strong>
+              <p>依赖交易所信用，非去中心化协议</p>
+            </div>
+          </div>
+        </div>
+        <div class="links-row">
+          <a href="https://www.binance.com/en/eoptions/" target="_blank">Binance</a>
+          <a href="https://www.okx.com/trade-option/" target="_blank">OKX</a>
+          <a href="https://www.bybit.com/trade/option/" target="_blank">Bybit</a>
+          <a href="https://www.coincall.com/options/" target="_blank">Coincall</a>
+          <a href="https://www.deribit.com/main" target="_blank">Deribit</a>
+        </div>
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Pure Static · GitHub Pages Ready · No Build Step</p>
+      <p class="muted">数据仅供参考，不构成投资建议 · 价格来自 Binance 实时 API</p>
+    </footer>
+  </div>
+
+  <!-- Oracle Assistant -->
+  <button type="button" class="oracle-btn" id="oracleBtn" onclick="toggleOracle()">🤖</button>
+  <div class="oracle-drawer" id="oracleDrawer">
+    <div class="oracle-header">
+      <span class="oracle-title">🤖 Oracle 助手</span>
+      <button type="button" class="oracle-close" onclick="toggleOracle()">✕</button>
+    </div>
+    <div class="oracle-msgs" id="oracleMessages"></div>
+    <div class="oracle-footer">
+      <textarea class="oracle-input" id="oracleInput" placeholder="输入问题... (Enter 发送)" rows="2"></textarea>
+      <button type="button" class="oracle-send" onclick="sendOracleMsg()">发送</button>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

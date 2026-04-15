@@ -1,0 +1,16 @@
+export const state = {
+  type: 'CALL',
+  notional: 1000,
+  targetDays: 1,
+  targetPrice: null,
+  lockTarget: false,
+  price: null,
+  change24h: 0,
+  products: [],
+  options: [],
+  deribitRaw: null,
+  rawProducts: [],
+  rawOptions: [],
+  lastUpdate: null,
+  loading: false,
+};

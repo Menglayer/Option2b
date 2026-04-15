@@ -1,0 +1,112 @@
+import { setHtml } from './utils.js';
+
+export function showLoading() {
+  setHtml('mainBody', '<tr><td colspan="11" class="loading-cell"><div class="skeleton-text"></div></td></tr>');
+}
+
+export function updatePriceDisplay(state) {
+  const el = document.getElementById('livePrice');
+  const chg = document.getElementById('priceChange');
+  el.textContent = '$' + (state.price ? state.price.toLocaleString() : '--');
+  if (state.change24h !== null) {
+    chg.textContent = (state.change24h >= 0 ? '+' : '') + state.change24h.toFixed(2) + '%';
+    chg.className = 'price-change ' + (state.change24h >= 0 ? 'up' : 'down');
+  }
+}
+
+export function renderSummary(state) {
+  const P = state.products;
+  if (!P.length) return;
+  const avgDual = P.reduce((s, p) => s + p.dualApr, 0) / P.length;
+  const avgOpt = P.reduce((s, p) => s + p.optionApr, 0) / P.length;
+  const gap = avgOpt - avgDual;
+  const days = state.targetDays || 7;
+  const loss = state.notional * (gap / 100) * (days / 365);
+
+  setHtml('avgDualApr', avgDual.toFixed(1) + '%');
+  setHtml('avgOptionApr', avgOpt.toFixed(1) + '%');
+  setHtml('avgGap', (gap >= 0 ? '+' : '') + gap.toFixed(1) + '%');
+  setHtml('annualLoss', '$' + loss.toFixed(0));
+  setHtml('productCount', `共 ${P.length} 个产品`);
+}
+
+export function renderMainTable(state) {
+  const tbody = document.getElementById('mainBody');
+  const P = [...state.products].sort((a, b) => {
+    const d = Math.abs((a.expiryDays || 7) - (state.targetDays || 1)) - Math.abs((b.expiryDays || 7) - (state.targetDays || 1));
+    if (d !== 0) return d;
+    return (a.hiddenSpread || 0) - (b.hiddenSpread || 0);
+  });
+
+  if (!P.length) {
+    tbody.innerHTML = '<tr><td colspan="11" class="muted center">暂无数据</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = P.map(p => {
+    const gap = p.optionApr - p.dualApr;
+    const gapPct = (gap / p.optionApr) * 100;
+    const dualDays = p.expiryDays || state.targetDays || 7;
+    const optionDays = p.optionExpiryDays || dualDays;
+    const usedDays = Math.min(dualDays, optionDays);
+    const loss = state.notional * (gap / 100) * (usedDays / 365);
+
+    let rating, rCls;
+    if (gapPct <= 25) { rating = 'A'; rCls = 'green'; }
+    else if (gapPct <= 32) { rating = 'B'; rCls = 'yellow'; }
+    else if (gapPct <= 40) { rating = 'C'; rCls = 'red'; }
+    else { rating = 'D'; rCls = 'red'; }
+
+    return `<tr>
+      <td><span class="tag ${p.tagClass}">${p.exchange}</span></td>
+      <td>${p.optionType}</td>
+      <td>$${p.strikePrice.toLocaleString()}</td>
+      <td class="muted">${p.distance}</td>
+      <td>${p.expiry} (${dualDays}d)</td>
+      <td>${p.optionExpiry || p.expiry} (${optionDays}d)</td>
+      <td class="accent">${p.dualApr.toFixed(1)}%</td>
+      <td class="positive">${p.optionApr.toFixed(1)}%</td>
+      <td class="negative">${gap >= 0 ? '+' : ''}${gap.toFixed(1)}% <span class="muted">(${gapPct.toFixed(0)}%)</span></td>
+      <td class="negative">$${loss.toFixed(2)}</td>
+      <td><span class="tag ${rCls}">${rating}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+export function renderOptionsTable(state) {
+  const tbody = document.getElementById('optBody');
+  const O = [...state.options].sort((a, b) => {
+    const d = Math.abs((a.expiryDays || 7) - (state.targetDays || 1)) - Math.abs((b.expiryDays || 7) - (state.targetDays || 1));
+    if (d !== 0) return d;
+    return (a.strikePrice || 0) - (b.strikePrice || 0);
+  });
+
+  if (!O.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="muted center">等待数据</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = O.map(o => `<tr>
+    <td><span class="tag ${o.tagClass}">${o.exchange}</span></td>
+    <td>${o.optionType}</td>
+    <td>$${o.strikePrice.toLocaleString()}</td>
+    <td>${o.expiry} (${o.expiryDays}d)</td>
+    <td>${(o.bid * 100).toFixed(2)}%</td>
+    <td>${(o.ask * 100).toFixed(2)}%</td>
+    <td class="positive">${o.apr.toFixed(1)}%</td>
+  </tr>`).join('');
+}
+
+export function updateTime(state) {
+  const el = document.getElementById('lastUpdate');
+  if (state.lastUpdate) {
+    el.textContent = state.lastUpdate.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+}
+
+export function renderAll(state) {
+  renderSummary(state);
+  renderMainTable(state);
+  renderOptionsTable(state);
+  updateTime(state);
+}
