@@ -308,49 +308,28 @@ tbody tr:hover { background: #f8fafc; }
   background: #fff;
 }
 
-.kb-list { display: grid; gap: 10px; }
-.kb-title {
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-.kb-item p { margin: 0; color: var(--text-soft); }
-.kb-item code {
-  display: block;
-  padding: 10px;
-  border-radius: 10px;
-  background: #f8fafc;
-  border: 1px solid var(--line);
-}
-.red-text { color: var(--red); }
-
-.risk-list { display: grid; gap: 10px; }
-.risk-item {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-.risk-item p { margin: 2px 0 0; color: var(--text-soft); }
-.links-row {
-  margin-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.links-row a {
-  color: #0f766e;
-  text-decoration: none;
-  border: 1px solid #99f6e4;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  background: var(--brand-soft);
-}
-
 .footer {
   margin-top: 16px;
   color: var(--text-soft);
   text-align: center;
   font-size: 12px;
+}
+
+.social-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+}
+
+.social-row a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.social-row a:hover {
+  color: var(--brand);
 }
 
 .muted { color: var(--text-soft); }
