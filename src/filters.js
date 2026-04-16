@@ -10,6 +10,20 @@ export function applyUserTargets(state) {
 
   const targetP = state.targetPrice ?? state.price ?? 0;
 
+  const diversifyByTenor = (arr, maxTotal, perTenor = 10) => {
+    const buckets = new Map();
+    for (const item of arr) {
+      const key = item.expiry || `${item.expiryDays || 0}D`;
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key).push(item);
+    }
+    const out = [];
+    for (const [, items] of buckets) {
+      out.push(...items.slice(0, perTenor));
+    }
+    return out.slice(0, maxTotal);
+  };
+
   if (state.lockTarget) {
     const strictProductPool = baseProducts.filter(p => {
       const dayOk = state.targetDays <= 3
@@ -53,8 +67,8 @@ export function applyUserTargets(state) {
       return pa - pb;
     });
 
-    state.products = rankedProducts.slice(0, 60);
-    state.options = rankedOptions.slice(0, 36);
+    state.products = diversifyByTenor(rankedProducts, 60, 10);
+    state.options = diversifyByTenor(rankedOptions, 36, 8);
     return;
   }
 
@@ -66,7 +80,7 @@ export function applyUserTargets(state) {
     const pb = Math.abs((b.strikePrice || 0) - targetP);
     return pa - pb;
   });
-  state.products = sortedProducts.slice(0, 60);
+  state.products = diversifyByTenor(sortedProducts, 60, 10);
 
   const sortedOptions = baseOptions.sort((a, b) => {
     const da = Math.abs((a.expiryDays || 7) - state.targetDays);
@@ -76,5 +90,5 @@ export function applyUserTargets(state) {
     const pb = Math.abs((b.strikePrice || 0) - targetP);
     return pa - pb;
   });
-  state.options = sortedOptions.slice(0, 36);
+  state.options = diversifyByTenor(sortedOptions, 36, 8);
 }

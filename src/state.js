@@ -11,6 +11,7 @@ export const state = {
   deribitRaw: null,
   rawProducts: [],
   rawOptions: [],
+  activeTenorTab: 'ALL',
   lastUpdate: null,
   loading: false,
   mode: 'online', // online | local

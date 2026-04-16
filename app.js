@@ -182,6 +182,8 @@ function onLockTargetChange() {
 
 function handleTargetsChange() {
   applyUserTargets(state);
+  state.activeTenorTab = 'ALL';
+  syncTenorTabs();
   state.lastUpdate = new Date();
   renderAll(state);
   updateVolatilityInsights();
@@ -191,6 +193,19 @@ function recalc() {
   state.notional = parseFloat(document.getElementById('notionalInput').value) || 1000;
   renderAll(state);
   updateVolatilityInsights();
+}
+
+function setTenorTab(tab) {
+  state.activeTenorTab = tab;
+  syncTenorTabs();
+  renderAll(state);
+}
+
+function syncTenorTabs() {
+  document.querySelectorAll('.tenor-tab').forEach(tab => {
+    const active = tab.getAttribute('data-tenor') === state.activeTenorTab;
+    tab.classList.toggle('active', active);
+  });
 }
 
 function toggleMode() {
@@ -311,6 +326,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('oracleBtn')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleClose')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleSend')?.addEventListener('click', sendOracleMsg);
+  document.querySelectorAll('.tenor-tab').forEach(tab => {
+    tab.addEventListener('click', () => setTenorTab(tab.getAttribute('data-tenor') || 'ALL'));
+  });
 
   const tDays = document.getElementById('targetDays');
   if (tDays) tDays.value = String(state.targetDays);
@@ -325,6 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const modeHint = document.getElementById('modeHint');
   if (modeHint) modeHint.textContent = state.mode === 'online' ? '实时接口优先' : '离线生成数据';
+  syncTenorTabs();
 
   tDays?.addEventListener('change', handleTargetsChange);
   tPrice?.addEventListener('change', handleTargetsChange);

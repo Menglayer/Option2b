@@ -494,6 +494,29 @@ button:hover {
 .table-wrapper {
   overflow: auto;
 }
+
+.tenor-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tenor-tab {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tenor-tab.active {
+  border-color: #99f6e4;
+  background: #ecfeff;
+  color: #0f766e;
+}
 table {
   width: 100%;
   border-collapse: collapse;

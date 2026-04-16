@@ -32,7 +32,11 @@ export function renderSummary(state) {
 
 export function renderMainTable(state) {
   const tbody = document.getElementById('mainBody');
-  const P = [...state.products].sort((a, b) => {
+  const base = state.activeTenorTab && state.activeTenorTab !== 'ALL'
+    ? state.products.filter(p => (p.expiry || `${p.expiryDays}D`) === state.activeTenorTab)
+    : state.products;
+
+  const P = [...base].sort((a, b) => {
     const d = Math.abs((a.expiryDays || 7) - (state.targetDays || 1)) - Math.abs((b.expiryDays || 7) - (state.targetDays || 1));
     if (d !== 0) return d;
     return (a.hiddenSpread || 0) - (b.hiddenSpread || 0);
