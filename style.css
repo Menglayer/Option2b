@@ -334,6 +334,15 @@ h1 {
   font-size: 13px;
 }
 
+.hero-cta {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid #cdeff0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(236,254,255,.92), rgba(239,246,255,.9));
+  box-shadow: 0 12px 28px rgba(14,165,166,.12);
+}
+
 .price-badge {
   display: inline-flex;
   align-items: center;
@@ -742,7 +751,7 @@ tbody tr:hover {
 .cta-title {
   margin: 0 0 6px;
   color: var(--text);
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: .01em;
 }
@@ -754,6 +763,12 @@ tbody tr:hover {
   gap: 8px;
 }
 
+.hero-cta-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .cta-links a {
   color: var(--brand);
   text-decoration: none;
@@ -761,15 +776,21 @@ tbody tr:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #bde8ea;
+  border-radius: 10px;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 4px 10px rgba(14,165,166,.08);
 }
 
 .cta-links a:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  transform: translateY(-1px);
 }
 
 .cta-links a img {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 4px;
   object-fit: cover;
   border: 1px solid var(--line);

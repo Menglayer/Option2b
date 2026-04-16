@@ -295,6 +295,90 @@ function updateVolatilityInsights() {
   }
 }
 
+function drawPayoffCurve() {
+  const canvas = document.getElementById('payoffCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const p0 = state.price || 98000;
+  const strike = parseFloat(document.getElementById('calcStrike')?.value || String(p0));
+  const premiumPct = parseFloat(document.getElementById('calcPremium')?.value || '3.5') / 100;
+  const n = state.notional || 100000;
+  const qty = n / Math.max(strike, 1);
+
+  const minP = p0 * 0.75;
+  const maxP = p0 * 1.25;
+  const steps = 220;
+  const values = [];
+
+  for (let i = 0; i <= steps; i++) {
+    const s = minP + (maxP - minP) * (i / steps);
+    const premium = n * premiumPct;
+    const payoff = state.type === 'CALL'
+      ? (s <= strike ? qty * s + premium - n : qty * strike + premium - n)
+      : (s >= strike ? premium : premium - (n - (n / strike) * s));
+    values.push({ s, payoff });
+  }
+
+  const minY = Math.min(...values.map(v => v.payoff));
+  const maxY = Math.max(...values.map(v => v.payoff));
+  const pad = 20;
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+
+  const y0 = h - pad - ((0 - minY) / Math.max(maxY - minY, 1)) * (h - pad * 2);
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad, y0);
+  ctx.lineTo(w - pad, y0);
+  ctx.stroke();
+
+  ctx.beginPath();
+  values.forEach((v, i) => {
+    const x = pad + (i / steps) * (w - pad * 2);
+    const y = h - pad - ((v.payoff - minY) / Math.max(maxY - minY, 1)) * (h - pad * 2);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#0ea5a6';
+  ctx.stroke();
+}
+
+function renderScenarioMatrix() {
+  const head = document.getElementById('scenarioHead');
+  const body = document.getElementById('scenarioBody');
+  if (!head || !body) return;
+
+  const p0 = state.price || 98000;
+  const strike = parseFloat(document.getElementById('simStrike')?.value || String(p0));
+  const n = parseFloat(document.getElementById('simNotional')?.value || String(state.notional || 100000));
+  const optionApr = parseFloat(document.getElementById('simOptionApr')?.value || '28');
+  const daysBase = parseFloat(document.getElementById('simDays')?.value || '7');
+
+  const priceMoves = [-0.2, -0.1, -0.05, 0, 0.05, 0.1, 0.2];
+  const dayScenarios = [Math.max(1, Math.round(daysBase * 0.3)), Math.max(1, Math.round(daysBase * 0.6)), Math.max(1, Math.round(daysBase))];
+
+  head.innerHTML = `<tr><th>到期天数</th>${priceMoves.map(m => `<th>${m >= 0 ? '+' : ''}${(m * 100).toFixed(0)}%</th>`).join('')}</tr>`;
+
+  body.innerHTML = dayScenarios.map(d => {
+    const tds = priceMoves.map(m => {
+      const s = p0 * (1 + m);
+      const premium = n * (optionApr / 100) * (d / 365);
+      const pnl = state.type === 'CALL'
+        ? (s <= strike ? premium : premium - (s - strike) * (n / strike))
+        : (s >= strike ? premium : premium - (strike - s) * (n / strike));
+      const cls = pnl >= 0 ? 'positive' : 'negative';
+      return `<td class="${cls}">$${pnl.toFixed(0)}</td>`;
+    }).join('');
+    return `<tr><td>${d}d</td>${tds}</tr>`;
+  }).join('');
+}
+
 function runStrategyComparison() {
   const notional = parseFloat(document.getElementById('simNotional')?.value || '1000');
   const current = parseFloat(document.getElementById('simCurrent')?.value || String(state.price || 98000));
@@ -320,6 +404,9 @@ function runStrategyComparison() {
       执行价：$${strike.toLocaleString()} · 到期：${days}天 · 理论合约数：${theoreticalContracts.toFixed(4)}（约 ${roundedContracts} 张）<br/>
       结果：<strong>${direction} $${Math.abs(gap).toFixed(2)}</strong>`;
   }
+
+  renderScenarioMatrix();
+  drawPayoffCurve();
 }
 
 function setupUxMotion() {
@@ -385,6 +472,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnPut')?.addEventListener('click', () => switchType('PUT'));
   document.getElementById('calcBtn')?.addEventListener('click', () => calculateProfit(state));
   document.getElementById('simCalcBtn')?.addEventListener('click', runStrategyComparison);
+  document.getElementById('sortBySelect')?.addEventListener('change', e => {
+    state.sortBy = e.target.value;
+    renderAll(state);
+  });
+  document.getElementById('moneynessSelect')?.addEventListener('change', e => {
+    state.moneynessFilter = e.target.value;
+    renderAll(state);
+  });
+  document.getElementById('calcPremium')?.addEventListener('change', drawPayoffCurve);
+  document.getElementById('calcStrike')?.addEventListener('change', drawPayoffCurve);
+  document.getElementById('simDays')?.addEventListener('change', renderScenarioMatrix);
+  document.getElementById('simOptionApr')?.addEventListener('change', renderScenarioMatrix);
   document.getElementById('oracleBtn')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleClose')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleSend')?.addEventListener('click', sendOracleMsg);
@@ -438,5 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // manual QA visibility in console
   setTimeout(() => {
     console.log('[QA] tenor distribution =>', reportTenorDistribution());
+    renderScenarioMatrix();
+    drawPayoffCurve();
   }, 1200);
 });

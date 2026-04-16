@@ -12,6 +12,8 @@ export const state = {
   rawProducts: [],
   rawOptions: [],
   activeTenorTab: 'ALL',
+  sortBy: 'spread',
+  moneynessFilter: 'ALL',
   lastUpdate: null,
   loading: false,
   mode: 'online', // online | local

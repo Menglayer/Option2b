@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script type="module" crossorigin src="./assets/index-B1r-HI_r.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-DUnS0FCn.css">
+  <script type="module" crossorigin src="./assets/index-h6pg9vTk.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CB9GcDyW.css">
 </head>
 <body>
   <!-- Entry Splash -->
@@ -51,6 +51,24 @@
         </div>
       </div>
       <p class="subtitle">BTC Dual vs Options Intelligence Dashboard</p>
+
+      <div class="hero-cta" aria-label="options-links">
+        <p class="cta-title">现在来这里操作期权吧！</p>
+        <p class="cta-links hero-cta-links">
+          <a href="https://www.deribit.com/?reg=20870.4314" target="_blank" rel="noopener noreferrer">
+            <img src="./assets/icon-derbit-0v5evGGE.png" alt="Deribit" />
+            <span>Deribit</span>
+          </a>
+          <a href="https://www.bybit.com/sign-up?affiliate_id=91392" target="_blank" rel="noopener noreferrer">
+            <img src="./assets/icon-bybit-D90lcsd1.jpg" alt="Bybit" />
+            <span>Bybit</span>
+          </a>
+          <a href="https://www.okx.com/zh-hans/join/5367051" target="_blank" rel="noopener noreferrer">
+            <img src="./assets/icon-okx-BguZ0rwC.jpg" alt="OKX" />
+            <span>OKX</span>
+          </a>
+        </p>
+      </div>
     </header>
 
     <!-- Control Bar -->
@@ -70,6 +88,18 @@
           <input type="checkbox" id="lockTarget" />
           <span>锁定目标</span>
         </label>
+        <label>排序</label>
+        <select id="sortBySelect">
+          <option value="spread">按价差</option>
+          <option value="apy">按期权APY</option>
+          <option value="distance">按执行价距离</option>
+        </select>
+        <label>价内外</label>
+        <select id="moneynessSelect">
+          <option value="ALL">全部</option>
+          <option value="ATM">近平值</option>
+          <option value="OTM">虚值</option>
+        </select>
       </div>
       <div class="control-right">
         <button type="button" class="api-toggle" id="modeToggle" data-mode="online">在线模式</button>
@@ -109,6 +139,13 @@
           <div class="sc-value yellow" id="annualLoss">$--</div>
         </div>
       </div>
+      <div class="summary-card">
+        <div class="sc-icon">⚖️</div>
+        <div class="sc-body">
+          <div class="sc-label">风险收益比</div>
+          <div class="sc-value blue" id="rrRatio">--</div>
+        </div>
+      </div>
     </section>
 
     <!-- Main Table -->
@@ -129,11 +166,12 @@
               <th>期权 APY</th>
               <th>隐藏价差</th>
               <th>CEX抽水 $</th>
+              <th>流动性</th>
               <th>评级</th>
             </tr>
           </thead>
           <tbody id="mainBody">
-            <tr><td colspan="11" class="loading-cell"><div class="skeleton-text">正在拉取实时数据...</div></td></tr>
+            <tr><td colspan="12" class="loading-cell"><div class="skeleton-text">正在拉取实时数据...</div></td></tr>
           </tbody>
         </table>
       </div>
@@ -258,6 +296,21 @@
       <div id="formulaGrid" class="grid-2col"></div>
     </section>
 
+    <section class="panel" id="scenarioPanel" style="margin-top:12px;">
+      <h2>🗺️ 情景矩阵 (价格 × 时间)</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead id="scenarioHead"></thead>
+          <tbody id="scenarioBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="payoffPanel" style="margin-top:12px;">
+      <h2>📉 到期收益曲线</h2>
+      <canvas id="payoffCanvas" width="1100" height="260" style="width:100%;height:260px;border:1px solid var(--line);border-radius:10px;background:#fff;"></canvas>
+    </section>
+
     <section class="panel" id="faqPanel" style="margin-top:12px;">
       <h2>❓ FAQ</h2>
       <div id="faqList"></div>
@@ -265,23 +318,6 @@
 
     <!-- Footer -->
     <footer class="footer">
-      <p class="cta-title">现在来这里操作期权吧！</p>
-      <p class="cta-links">
-        <a href="https://www.deribit.com/?reg=20870.4314" target="_blank" rel="noopener noreferrer">
-          <img src="./assets/icon-derbit-0v5evGGE.png" alt="Deribit" />
-          <span>Deribit</span>
-        </a>
-        <span>·</span>
-        <a href="https://www.bybit.com/sign-up?affiliate_id=91392" target="_blank" rel="noopener noreferrer">
-          <img src="./assets/icon-bybit-D90lcsd1.jpg" alt="Bybit" />
-          <span>Bybit</span>
-        </a>
-        <span>·</span>
-        <a href="https://www.okx.com/zh-hans/join/5367051" target="_blank" rel="noopener noreferrer">
-          <img src="./assets/icon-okx-BguZ0rwC.jpg" alt="OKX" />
-          <span>OKX</span>
-        </a>
-      </p>
       <p class="muted">Data for reference only</p>
     </footer>
   </div>

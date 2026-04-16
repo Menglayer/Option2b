@@ -30,11 +30,13 @@ export function renderSummary(state) {
   const gap = avgOpt - avgDual;
   const days = state.targetDays || 7;
   const loss = state.notional * (gap / 100) * (days / 365);
+  const rr = avgDual > 0 ? (avgOpt / avgDual) : 0;
 
   setHtml('avgDualApr', avgDual.toFixed(1) + '%');
   setHtml('avgOptionApr', avgOpt.toFixed(1) + '%');
   setHtml('avgGap', (gap >= 0 ? '+' : '') + gap.toFixed(1) + '%');
   setHtml('annualLoss', '$' + loss.toFixed(0));
+  setHtml('rrRatio', rr > 0 ? rr.toFixed(2) + 'x' : '--');
   setHtml('productCount', `共 ${P.length} 个产品`);
 }
 
@@ -45,14 +47,28 @@ export function renderMainTable(state) {
     ? state.products.filter(p => getTenorKey(p) === activeKey)
     : state.products;
 
-  const P = [...base].sort((a, b) => {
+  const pre = [...base].filter(p => {
+    if (state.moneynessFilter === 'ALL') return true;
+    const dist = Math.abs(parseFloat(String(p.distance).replace('%', '').replace('+', '')) || 0);
+    if (state.moneynessFilter === 'ATM') return dist <= 3.5;
+    if (state.moneynessFilter === 'OTM') return dist > 3.5;
+    return true;
+  });
+
+  const P = pre.sort((a, b) => {
+    if (state.sortBy === 'apy') return (b.optionApr || 0) - (a.optionApr || 0);
+    if (state.sortBy === 'distance') {
+      const da = Math.abs(parseFloat(String(a.distance).replace('%', '').replace('+', '')) || 0);
+      const db = Math.abs(parseFloat(String(b.distance).replace('%', '').replace('+', '')) || 0);
+      return da - db;
+    }
     const d = Math.abs((a.expiryDays || 7) - (state.targetDays || 1)) - Math.abs((b.expiryDays || 7) - (state.targetDays || 1));
     if (d !== 0) return d;
     return (a.hiddenSpread || 0) - (b.hiddenSpread || 0);
   });
 
   if (!P.length) {
-    tbody.innerHTML = '<tr><td colspan="11" class="muted center">暂无数据</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="muted center">暂无数据</td></tr>';
     return;
   }
 
@@ -70,6 +86,9 @@ export function renderMainTable(state) {
     else if (gapPct <= 40) { rating = 'C'; rCls = 'red'; }
     else { rating = 'D'; rCls = 'red'; }
 
+    const liqScore = Math.max(1, Math.min(99, Math.round(100 - Math.abs(gapPct - 25) * 1.6)));
+    const liqLabel = liqScore > 70 ? '高' : liqScore > 45 ? '中' : '低';
+
     return `<tr>
       <td><span class="tag ${p.tagClass}">${p.exchange}</span></td>
       <td>${p.optionType}</td>
@@ -81,6 +100,7 @@ export function renderMainTable(state) {
       <td class="positive">${p.optionApr.toFixed(1)}%</td>
       <td class="negative">${gap >= 0 ? '+' : ''}${gap.toFixed(1)}% <span class="muted">(${gapPct.toFixed(0)}%)</span></td>
       <td class="negative">$${loss.toFixed(2)}</td>
+      <td><span class="tag ${liqScore > 70 ? 'green' : liqScore > 45 ? 'yellow' : 'red'}">${liqLabel} ${liqScore}</span></td>
       <td><span class="tag ${rCls}">${rating}</span></td>
     </tr>`;
   }).join('');
