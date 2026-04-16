@@ -344,6 +344,29 @@ h1 {
   box-shadow: 0 16px 34px rgba(14,165,166,.16);
 }
 
+.asset-toggle {
+  display: flex;
+  background: var(--surface-soft);
+  border-radius: 8px;
+  padding: 4px;
+  border: 1px solid var(--line);
+}
+.asset-toggle button {
+  border: none;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 700;
+  color: var(--text-soft);
+  cursor: pointer;
+  box-shadow: none;
+}
+.asset-toggle button.active {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+.asset-toggle button::after { display: none; }
+
 .price-badge {
   display: inline-flex;
   align-items: center;

@@ -1,6 +1,7 @@
 export const api = {
-  async btcPrice() {
-    const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
+  async cryptoPrice(coin = 'BTC') {
+    const symbol = `${coin}USDT`;
+    const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
     if (!res.ok) throw new Error(`Binance ${res.status}`);
     const d = await res.json();
     return {
@@ -9,18 +10,19 @@ export const api = {
     };
   },
 
-  async coingeckoPrice() {
-    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
+  async coingeckoPrice(coin = 'BTC') {
+    const id = coin === 'ETH' ? 'ethereum' : 'bitcoin';
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true`);
     if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
     const d = await res.json();
-    const p = d?.bitcoin?.usd;
-    const c = d?.bitcoin?.usd_24h_change;
+    const p = d[id]?.usd;
+    const c = d[id]?.usd_24h_change;
     if (typeof p !== 'number') throw new Error('CoinGecko invalid payload');
     return { price: p, change24h: typeof c === 'number' ? c : 0 };
   },
 
-  async deribitOptions() {
-    const res = await fetch('https://www.deribit.com/api/v2/public/get_book_summary_by_currency?currency=BTC&kind=option');
+  async deribitOptions(coin = 'BTC') {
+    const res = await fetch(`https://www.deribit.com/api/v2/public/get_book_summary_by_currency?currency=${coin}&kind=option`);
     if (!res.ok) throw new Error(`Deribit ${res.status}`);
     const d = await res.json();
     if (d.result) return d.result;

@@ -74,11 +74,11 @@ async function init() {
   showLoading();
   try {
     try {
-      const { price, change24h } = await api.btcPrice();
+      const { price, change24h } = await api.cryptoPrice(state.coin);
       state.price = price;
       state.change24h = change24h;
     } catch {
-      const { price, change24h } = await api.coingeckoPrice();
+      const { price, change24h } = await api.coingeckoPrice(state.coin);
       state.price = price;
       state.change24h = change24h;
     }
@@ -86,27 +86,27 @@ async function init() {
     updatePriceDisplay(state);
     syncMarketInputs();
 
-    if (state.mode === 'online') {
+      if (state.mode === 'online') {
       let deribitData = null;
       try {
-        deribitData = await api.deribitOptions();
+        deribitData = await api.deribitOptions(state.coin);
         state.deribitRaw = deribitData;
       } catch {
         state.deribitRaw = null;
       }
 
       if (deribitData && deribitData.length > 0) {
-        const out = buildFromDeribit(deribitData, state.type, state.price);
+        const out = buildFromDeribit(deribitData, state.type, state.price, state.coin);
         state.products = out.products;
         state.options = out.options;
       } else {
-        const out = generateData(state.price, state.type);
+        const out = generateData(state.price, state.type, state.coin);
         state.products = out.products;
         state.options = out.options;
       }
 
     } else {
-      const out = generateData(state.price, state.type);
+      const out = generateData(state.price, state.type, state.coin);
       state.products = out.products;
       state.options = out.options;
       state.deribitRaw = null;
@@ -124,8 +124,8 @@ async function init() {
     updateVolatilityInsights();
   } catch (err) {
     console.error('Init failed:', err);
-    state.price = state.price || 97000;
-    const out = generateData(state.price, state.type);
+    state.price = state.price || (state.coin === 'ETH' ? 3000 : 97000);
+    const out = generateData(state.price, state.type, state.coin);
     state.products = out.products;
     state.options = out.options;
     state.rawProducts = [...state.products];
@@ -168,11 +168,11 @@ function switchType(type) {
 
   if (state.price) {
     if (state.mode === 'online' && state.deribitRaw?.length) {
-      const out = buildFromDeribit(state.deribitRaw, state.type, state.price);
+      const out = buildFromDeribit(state.deribitRaw, state.type, state.price, state.coin);
       state.products = out.products;
       state.options = out.options;
     } else {
-      const out = generateData(state.price, state.type);
+      const out = generateData(state.price, state.type, state.coin);
       state.products = out.products;
       state.options = out.options;
     }
@@ -239,6 +239,26 @@ function toggleMode() {
   if (hint) {
     hint.textContent = state.mode === 'online' ? '实时接口优先' : '离线生成数据';
   }
+  fetchAllData();
+}
+
+function switchCoin(coin) {
+  if (state.coin === coin) return;
+  state.coin = coin;
+  document.getElementById('priceCoinLabel').textContent = coin;
+  document.querySelectorAll('#assetToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.coin === coin);
+  });
+  
+  // reset default notional appropriately
+  if (coin === 'ETH') {
+    document.getElementById('notionalInput').value = '10000';
+    state.notional = 10000;
+  } else {
+    document.getElementById('notionalInput').value = '100000';
+    state.notional = 100000;
+  }
+  
   fetchAllData();
 }
 
@@ -513,6 +533,11 @@ document.addEventListener('DOMContentLoaded', () => {
   init();
   setupUxMotion();
 
+  // Asset Tracker Switch
+  document.querySelectorAll('#assetToggle button').forEach(b => {
+    b.addEventListener('click', e => switchCoin(e.target.dataset.coin));
+  });
+
   // Buttons
   document.getElementById('refreshBtn')?.addEventListener('click', fetchAllData);
   document.getElementById('exportBtn')?.addEventListener('click', exportToCSV);
@@ -583,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setInterval(async () => {
     try {
-      const { price, change24h } = await api.btcPrice();
+      const { price, change24h } = await api.cryptoPrice(state.coin);
       state.price = price;
       state.change24h = change24h;
       updatePriceDisplay(state);

@@ -44,8 +44,12 @@
       </div>
       <div class="header-top">
         <h1>2B-Options</h1>
+        <div class="asset-toggle" id="assetToggle">
+          <button class="active" data-coin="BTC">BTC</button>
+          <button data-coin="ETH">ETH</button>
+        </div>
         <div class="price-badge" id="priceBadge">
-          <span class="price-label">BTC</span>
+          <span class="price-label" id="priceCoinLabel">BTC</span>
           <span class="price-value" id="livePrice">--</span>
           <span class="price-change" id="priceChange"></span>
         </div>

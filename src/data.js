@@ -1,11 +1,14 @@
 import { labelByDays, parseDeribitDateToken } from './utils.js';
 
-export function generateData(price, type) {
+export function generateData(price, type, coin = 'BTC') {
   const p = Math.round(price);
   const isCall = type === 'CALL';
+  
+  const interval = coin === 'ETH' ? 50 : 1000;
+  
   const strikes = isCall
-    ? [Math.round(p * 1.02), Math.round(p * 1.04), Math.round(p * 1.06), Math.round(p * 1.08)]
-    : [Math.round(p * 0.96), Math.round(p * 0.94), Math.round(p * 0.92), Math.round(p * 0.90)];
+    ? [Math.round((p * 1.02) / interval) * interval, Math.round((p * 1.04) / interval) * interval, Math.round((p * 1.06) / interval) * interval, Math.round((p * 1.08) / interval) * interval]
+    : [Math.round((p * 0.96) / interval) * interval, Math.round((p * 0.94) / interval) * interval, Math.round((p * 0.92) / interval) * interval, Math.round((p * 0.90) / interval) * interval];
 
   const exchanges = [
     { name: 'Binance', tagClass: 'binance', spread: 0.32 },
@@ -34,7 +37,7 @@ export function generateData(price, type) {
       products.push({
         exchange: ex.name,
         tagClass: ex.tagClass,
-        investCoin: 'BTC',
+        investCoin: coin,
         strikePrice: strike,
         expiry: exp.label,
         expiryDays: exp.days,
@@ -81,7 +84,7 @@ export function generateData(price, type) {
   return { products, options };
 }
 
-export function buildFromDeribit(rows, type, currentPrice) {
+export function buildFromDeribit(rows, type, currentPrice, coin = 'BTC') {
   const now = Date.now();
   const typeLetter = type === 'CALL' ? 'C' : 'P';
   const parsed = rows.map(r => {
@@ -157,7 +160,7 @@ export function buildFromDeribit(rows, type, currentPrice) {
       products.push({
         exchange: ex.name,
         tagClass: ex.tagClass,
-        investCoin: 'BTC',
+        investCoin: coin,
         strikePrice: s.strikePrice,
         expiry: s.expiry,
         expiryDays: s.expiryDays,

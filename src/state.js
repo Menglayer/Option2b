@@ -1,4 +1,5 @@
 export const state = {
+  coin: 'BTC',
   type: 'CALL',
   notional: 100000,
   targetDays: 1,
