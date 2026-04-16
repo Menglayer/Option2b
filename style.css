@@ -740,6 +740,31 @@ tbody tr:hover {
   font-size: 12px;
 }
 
+.cta-title {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+
+.cta-links {
+  margin: 0 0 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cta-links a {
+  color: var(--brand);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.cta-links a:hover {
+  text-decoration: underline;
+}
+
 .social-row {
   display: inline-flex;
   align-items: center;
