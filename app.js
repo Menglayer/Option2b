@@ -195,6 +195,15 @@ function recalc() {
   updateVolatilityInsights();
 }
 
+function reportTenorDistribution() {
+  const map = new Map();
+  for (const p of state.products) {
+    const k = p.expiry || `${p.expiryDays}D`;
+    map.set(k, (map.get(k) || 0) + 1);
+  }
+  return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => `${k}:${v}`).join(', ');
+}
+
 function setTenorTab(tab) {
   state.activeTenorTab = tab;
   syncTenorTabs();
@@ -368,4 +377,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // noop
     }
   }, 60000);
+
+  // manual QA visibility in console
+  setTimeout(() => {
+    console.log('[QA] tenor distribution =>', reportTenorDistribution());
+  }, 1200);
 });

@@ -133,8 +133,23 @@ export function buildFromDeribit(rows, type, currentPrice) {
     { name: 'Bybit', tagClass: 'bybit', spread: 0.26 },
   ];
 
-  const seed = options.slice(0, 10);
   const products = [];
+  const tenorPick = [];
+  const pushByTenor = (arr, maxPerTenor = 4) => {
+    const m = new Map();
+    for (const it of arr) {
+      const k = it.expiry || `${it.expiryDays}D`;
+      if (!m.has(k)) m.set(k, 0);
+      if (m.get(k) < maxPerTenor) {
+        tenorPick.push(it);
+        m.set(k, m.get(k) + 1);
+      }
+    }
+  };
+  pushByTenor(ultraShort, 5);
+  pushByTenor(short, 4);
+  pushByTenor(mid, 3);
+  const seed = tenorPick.length ? tenorPick.slice(0, 18) : options.slice(0, 12);
   for (const s of seed) {
     for (const ex of exchanges) {
       const hidden = ex.spread;
