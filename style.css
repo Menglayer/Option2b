@@ -664,7 +664,6 @@ tbody tr {
 }
 tbody tr:hover {
   background: linear-gradient(90deg, rgba(236,254,255,.75), rgba(239,246,255,.68));
-  transform: translateX(1px);
 }
 
 .tag {
@@ -759,10 +758,21 @@ tbody tr:hover {
   color: var(--brand);
   text-decoration: none;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .cta-links a:hover {
   text-decoration: underline;
+}
+
+.cta-links a img {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid var(--line);
 }
 
 .social-row {

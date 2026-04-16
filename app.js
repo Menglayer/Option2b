@@ -340,7 +340,7 @@ function setupUxMotion() {
     io.observe(el);
   });
 
-  const cards = document.querySelectorAll('.summary-card, .panel');
+  const cards = document.querySelectorAll('.summary-card');
   cards.forEach(card => {
     card.classList.add('tilt-card');
     card.addEventListener('mousemove', e => {
