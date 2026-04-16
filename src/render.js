@@ -32,11 +32,21 @@ export function renderSummary(state) {
   const loss = state.notional * (gap / 100) * (days / 365);
   const rr = avgDual > 0 ? (avgOpt / avgDual) : 0;
 
+  const gaps = P.map(p => (p.optionApr || 0) - (p.dualApr || 0)).sort((a, b) => a - b);
+  const maxGap = gaps.length ? gaps[gaps.length - 1] : 0;
+  const medianGap = gaps.length
+    ? (gaps.length % 2 ? gaps[(gaps.length - 1) / 2] : (gaps[gaps.length / 2 - 1] + gaps[gaps.length / 2]) / 2)
+    : 0;
+  const takeRate = avgOpt > 0 ? ((gap / avgOpt) * 100) : 0;
+
   setHtml('avgDualApr', avgDual.toFixed(1) + '%');
   setHtml('avgOptionApr', avgOpt.toFixed(1) + '%');
   setHtml('avgGap', (gap >= 0 ? '+' : '') + gap.toFixed(1) + '%');
   setHtml('annualLoss', '$' + loss.toFixed(0));
   setHtml('rrRatio', rr > 0 ? rr.toFixed(2) + 'x' : '--');
+  setHtml('maxGap', (maxGap >= 0 ? '+' : '') + maxGap.toFixed(1) + '%');
+  setHtml('medianGap', (medianGap >= 0 ? '+' : '') + medianGap.toFixed(1) + '%');
+  setHtml('cexTakeRate', takeRate.toFixed(1) + '%');
   setHtml('productCount', `共 ${P.length} 个产品`);
 }
 
