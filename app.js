@@ -40,7 +40,8 @@ function playEntrySplash() {
   });
 
   if (metricEl) {
-    animateMetric(metricEl, -32.7, 1050);
+    const randomSplash = -(Math.random() * 20 + 20); // random between -20.0 and -40.0
+    animateMetric(metricEl, randomSplash, 1050);
   }
 
   setTimeout(() => {
@@ -260,17 +261,6 @@ function exportToCSV() {
   document.body.removeChild(link);
 }
 
-function toggleTheme() {
-  const root = document.documentElement;
-  const isDark = root.getAttribute('data-theme') === 'dark';
-  const newTheme = isDark ? 'light' : 'dark';
-  root.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
-  const tBtn = document.getElementById('themeToggle');
-  if (tBtn) tBtn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
-  drawPayoffCurve();
-}
-
 function renderKnowledgePanels() {
   const greeksGrid = document.getElementById('greeksGrid');
   if (greeksGrid) {
@@ -365,16 +355,13 @@ function drawPayoffCurve() {
   const pad = 20;
   const w = canvas.width;
   const h = canvas.height;
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const bgColor = isDark ? '#111827' : '#ffffff';
-  const gridColor = isDark ? '#334155' : '#cbd5e1';
-
+  
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = bgColor;
+  ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, w, h);
 
   const y0 = h - pad - ((0 - minY) / Math.max(maxY - minY, 1)) * (h - pad * 2);
-  ctx.strokeStyle = gridColor;
+  ctx.strokeStyle = '#cbd5e1';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(pad, y0);
@@ -529,7 +516,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Buttons
   document.getElementById('refreshBtn')?.addEventListener('click', fetchAllData);
   document.getElementById('exportBtn')?.addEventListener('click', exportToCSV);
-  document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
   document.getElementById('modeToggle')?.addEventListener('click', toggleMode);
   document.getElementById('btnCall')?.addEventListener('click', () => switchType('CALL'));
   document.getElementById('btnPut')?.addEventListener('click', () => switchType('PUT'));
@@ -550,12 +536,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('oracleBtn')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleClose')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleSend')?.addEventListener('click', sendOracleMsg);
-
-  const tBtn = document.getElementById('themeToggle');
-  if (tBtn) {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    tBtn.textContent = isDark ? '☀️' : '🌙';
-  }
 
   const tDays = document.getElementById('targetDays');
   if (tDays) tDays.value = String(state.targetDays);
@@ -597,7 +577,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const k = e.key.toLowerCase();
     if (k === 'r') { e.preventDefault(); fetchAllData(); }
     if (k === 'e') { e.preventDefault(); exportToCSV(); }
-    if (k === 't') { e.preventDefault(); toggleTheme(); }
     if (k === 'c') { e.preventDefault(); switchType('CALL'); }
     if (k === 'p') { e.preventDefault(); switchType('PUT'); }
   });

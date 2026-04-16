@@ -13,12 +13,6 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <script>
-    // System Theme Init
-    if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    }
-  </script>
 </head>
 <body>
   <!-- Entry Splash -->
@@ -109,7 +103,6 @@
         </select>
       </div>
       <div class="control-right">
-        <button type="button" class="theme-toggle" id="themeToggle" title="切换主题 (T)">🌙</button>
         <button type="button" class="export-btn" id="exportBtn" disabled title="导出CSV (E)">💾 导出</button>
         <button type="button" class="api-toggle" id="modeToggle" data-mode="online">在线模式</button>
         <button type="button" class="refresh-btn" id="refreshBtn" title="刷新数据 (R)">🔄 刷新</button>
