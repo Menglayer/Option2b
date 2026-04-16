@@ -142,13 +142,16 @@ async function fetchAllData() {
   if (state.loading) return;
   state.loading = true;
   const btn = document.getElementById('refreshBtn');
+  const expBtn = document.getElementById('exportBtn');
   btn.disabled = true;
+  if(expBtn) expBtn.disabled = true;
   btn.textContent = '⏳...';
 
   await init();
 
   btn.disabled = false;
-  btn.textContent = '🔄 刷新数据';
+  if(expBtn) expBtn.disabled = false;
+  btn.textContent = '🔄 刷新';
   state.loading = false;
 }
 
@@ -230,6 +233,36 @@ function toggleMode() {
     hint.textContent = state.mode === 'online' ? '实时接口优先' : '离线生成数据';
   }
   fetchAllData();
+}
+
+function exportToCSV() {
+  if (!state.products || !state.products.length) return;
+  const headers = ['Exchange', 'Type', 'Strike', 'Distance', 'Dual Expiry', 'Option Expiry', 'Dual APY', 'Option APY', 'Spread', 'Liquidity'];
+  const rows = state.products.map(p => [
+    p.exchange, p.optionType, p.strikePrice, p.distance,
+    `${p.expiry} (${p.expiryDays}d)`, `${p.optionExpiry || p.expiry} (${p.optionExpiryDays || p.expiryDays}d)`,
+    `${p.dualApr.toFixed(2)}%`, `${p.optionApr.toFixed(2)}%`, `${(p.optionApr - p.dualApr).toFixed(2)}%`,
+    p.liquidity || 0
+  ]);
+  const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', `2b_options_${state.type}_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const isDark = root.getAttribute('data-theme') === 'dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  root.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  const tBtn = document.getElementById('themeToggle');
+  if (tBtn) tBtn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+  drawPayoffCurve();
 }
 
 function renderKnowledgePanels() {
@@ -326,17 +359,39 @@ function drawPayoffCurve() {
   const pad = 20;
   const w = canvas.width;
   const h = canvas.height;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const bgColor = isDark ? '#111827' : '#ffffff';
+  const gridColor = isDark ? '#334155' : '#cbd5e1';
+
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, w, h);
 
   const y0 = h - pad - ((0 - minY) / Math.max(maxY - minY, 1)) * (h - pad * 2);
-  ctx.strokeStyle = '#cbd5e1';
+  ctx.strokeStyle = gridColor;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(pad, y0);
   ctx.lineTo(w - pad, y0);
   ctx.stroke();
+
+  ctx.beginPath();
+  values.forEach((v, i) => {
+    const x = pad + (i / steps) * (w - pad * 2);
+    const y = h - pad - ((v.payoff - minY) / Math.max(maxY - minY, 1)) * (h - pad * 2);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  
+  // Create gradient fill under curve
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, 'rgba(14, 165, 166, 0.4)');
+  grad.addColorStop(1, 'rgba(14, 165, 166, 0.0)');
+  
+  ctx.lineTo(w - pad, h - pad);
+  ctx.lineTo(pad, h - pad);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
 
   ctx.beginPath();
   values.forEach((v, i) => {
@@ -467,6 +522,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Buttons
   document.getElementById('refreshBtn')?.addEventListener('click', fetchAllData);
+  document.getElementById('exportBtn')?.addEventListener('click', exportToCSV);
+  document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
   document.getElementById('modeToggle')?.addEventListener('click', toggleMode);
   document.getElementById('btnCall')?.addEventListener('click', () => switchType('CALL'));
   document.getElementById('btnPut')?.addEventListener('click', () => switchType('PUT'));
@@ -487,6 +544,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('oracleBtn')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleClose')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleSend')?.addEventListener('click', sendOracleMsg);
+
+  const tBtn = document.getElementById('themeToggle');
+  if (tBtn) {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    tBtn.textContent = isDark ? '☀️' : '🌙';
+  }
 
   const tDays = document.getElementById('targetDays');
   if (tDays) tDays.value = String(state.targetDays);
@@ -520,6 +583,17 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       sendOracleMsg();
     }
+  });
+
+  // Global Keyboard Shortcuts
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    const k = e.key.toLowerCase();
+    if (k === 'r') { e.preventDefault(); fetchAllData(); }
+    if (k === 'e') { e.preventDefault(); exportToCSV(); }
+    if (k === 't') { e.preventDefault(); toggleTheme(); }
+    if (k === 'c') { e.preventDefault(); switchType('CALL'); }
+    if (k === 'p') { e.preventDefault(); switchType('PUT'); }
   });
 
   setInterval(async () => {

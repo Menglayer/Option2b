@@ -11,7 +11,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script>
+    // System Theme Init
+    if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  </script>
 </head>
 <body>
   <!-- Entry Splash -->
@@ -102,10 +109,14 @@
         </select>
       </div>
       <div class="control-right">
+        <button type="button" class="theme-toggle" id="themeToggle" title="切换主题 (T)">🌙</button>
+        <button type="button" class="export-btn" id="exportBtn" disabled title="导出CSV (E)">💾 导出</button>
         <button type="button" class="api-toggle" id="modeToggle" data-mode="online">在线模式</button>
-        <button type="button" class="refresh-btn" id="refreshBtn">🔄 刷新数据</button>
-        <span class="update-time" id="modeHint"></span>
-        <span class="update-time" id="lastUpdate"></span>
+        <button type="button" class="refresh-btn" id="refreshBtn" title="刷新数据 (R)">🔄 刷新</button>
+        <div class="update-info-col">
+          <span class="update-time" id="modeHint"></span>
+          <span class="update-time" id="lastUpdate"></span>
+        </div>
       </div>
     </section>
 
@@ -179,13 +190,13 @@
             <tr>
               <th>交易所</th>
               <th>方向</th>
-              <th>执行价</th>
-              <th>距离</th>
+              <th class="sortable" data-sort="strike">执行价</th>
+              <th class="sortable" data-sort="distance">距离</th>
               <th>双币到期</th>
               <th>期权到期</th>
               <th>双币 APY</th>
-              <th>期权 APY</th>
-              <th>隐藏价差</th>
+              <th class="sortable" data-sort="apy">期权 APY</th>
+              <th class="sortable" data-sort="spread">隐藏价差</th>
               <th>CEX抽水 $</th>
               <th>流动性</th>
               <th>评级</th>
@@ -329,7 +340,7 @@
 
     <section class="panel" id="payoffPanel" style="margin-top:12px;">
       <h2>📉 到期收益曲线</h2>
-      <canvas id="payoffCanvas" width="1100" height="260" style="width:100%;height:260px;border:1px solid var(--line);border-radius:10px;background:#fff;"></canvas>
+      <canvas id="payoffCanvas" width="1100" height="260" style="width:100%;height:260px;border:1px solid var(--line);border-radius:10px;background:var(--surface);"></canvas>
     </section>
 
     <section class="panel" id="faqPanel" style="margin-top:12px;">

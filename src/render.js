@@ -22,6 +22,28 @@ export function updatePriceDisplay(state) {
   }
 }
 
+function animateValue(id, value, formatFn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const currentText = el.innerText.replace(/[^0-9.-]/g, '');
+  const start = parseFloat(currentText) || 0;
+  const end = value;
+  const duration = 600;
+  let startTimestamp = null;
+  
+  const step = (timestamp) => {
+    if (!startTimestamp) startTimestamp = timestamp;
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const cur = start + eased * (end - start);
+    el.innerHTML = formatFn(cur);
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    }
+  };
+  window.requestAnimationFrame(step);
+}
+
 export function renderSummary(state) {
   const P = state.products;
   if (!P.length) return;
@@ -39,14 +61,14 @@ export function renderSummary(state) {
     : 0;
   const takeRate = avgOpt > 0 ? ((gap / avgOpt) * 100) : 0;
 
-  setHtml('avgDualApr', avgDual.toFixed(1) + '%');
-  setHtml('avgOptionApr', avgOpt.toFixed(1) + '%');
-  setHtml('avgGap', (gap >= 0 ? '+' : '') + gap.toFixed(1) + '%');
-  setHtml('annualLoss', '$' + loss.toFixed(0));
-  setHtml('rrRatio', rr > 0 ? rr.toFixed(2) + 'x' : '--');
-  setHtml('maxGap', (maxGap >= 0 ? '+' : '') + maxGap.toFixed(1) + '%');
-  setHtml('medianGap', (medianGap >= 0 ? '+' : '') + medianGap.toFixed(1) + '%');
-  setHtml('cexTakeRate', takeRate.toFixed(1) + '%');
+  animateValue('avgDualApr', avgDual, v => v.toFixed(1) + '%');
+  animateValue('avgOptionApr', avgOpt, v => v.toFixed(1) + '%');
+  animateValue('avgGap', gap, v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
+  animateValue('annualLoss', loss, v => '$' + v.toFixed(0));
+  animateValue('rrRatio', rr, v => v > 0 ? v.toFixed(2) + 'x' : '--');
+  animateValue('maxGap', maxGap, v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
+  animateValue('medianGap', medianGap, v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
+  animateValue('cexTakeRate', takeRate, v => v.toFixed(1) + '%');
   setHtml('productCount', `共 ${P.length} 个产品`);
 }
 
@@ -82,7 +104,7 @@ export function renderMainTable(state) {
     return;
   }
 
-  tbody.innerHTML = P.map(p => {
+  const rows = P.map(p => {
     const gap = p.optionApr - p.dualApr;
     const gapPct = (gap / p.optionApr) * 100;
     const dualDays = p.expiryDays || state.targetDays || 7;
@@ -99,21 +121,49 @@ export function renderMainTable(state) {
     const liqScore = Math.max(1, Math.min(99, Math.round(100 - Math.abs(gapPct - 25) * 1.6)));
     const liqLabel = liqScore > 70 ? '高' : liqScore > 45 ? '中' : '低';
 
-    return `<tr>
+    return `<tr onclick="this.nextElementSibling.querySelector('.row-details-wrapper').classList.toggle('expanded')" title="点击查看详情">
       <td><span class="tag ${p.tagClass}">${p.exchange}</span></td>
       <td>${p.optionType}</td>
       <td>$${p.strikePrice.toLocaleString()}</td>
       <td class="muted">${p.distance}</td>
-      <td>${p.expiry} (${dualDays}d)</td>
-      <td>${p.optionExpiry || p.expiry} (${optionDays}d)</td>
+      <td>${p.expiry} <span class="muted" style="font-size:11px">(${dualDays}d)</span></td>
+      <td>${p.optionExpiry || p.expiry} <span class="muted" style="font-size:11px">(${optionDays}d)</span></td>
       <td class="accent">${p.dualApr.toFixed(1)}%</td>
       <td class="positive">${p.optionApr.toFixed(1)}%</td>
       <td class="negative">${gap >= 0 ? '+' : ''}${gap.toFixed(1)}% <span class="muted">(${gapPct.toFixed(0)}%)</span></td>
       <td class="negative">$${loss.toFixed(2)}</td>
       <td><span class="tag ${liqScore > 70 ? 'green' : liqScore > 45 ? 'yellow' : 'red'}">${liqLabel} ${liqScore}</span></td>
       <td><span class="tag ${rCls}">${rating}</span></td>
-    </tr>`;
+    </tr>
+    <tr class="row-divider"><td colspan="12">
+      <div class="row-details-wrapper">
+        <div class="row-details-inner">
+          <div><strong>流动性分析:</strong> ${liqLabel} (参考值)</div>
+          <div><strong>隐藏费率:</strong> 此交易所期权溢价率为 ${(gapPct).toFixed(1)}%。</div>
+          <div><strong>收益差距:</strong> 如果用 ${state.notional.toLocaleString()} 刀，到期相差 $${loss.toFixed(2)}，年化缩水 ${gap.toFixed(1)}%。</div>
+        </div>
+      </div>
+    </td></tr>`;
   }).join('');
+  
+  tbody.innerHTML = rows;
+
+  // Add visual sorting cues
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.innerHTML = th.innerHTML.replace(' ↓', '');
+    if (th.getAttribute('data-sort') === state.sortBy) {
+      th.innerHTML += ' ↓';
+    }
+    // Also attach click listeners to headers for quick sort!
+    th.style.cursor = 'pointer';
+    th.onclick = () => {
+      const select = document.getElementById('sortBySelect');
+      if (select) {
+        select.value = th.getAttribute('data-sort');
+        select.dispatchEvent(new Event('change'));
+      }
+    };
+  });
 }
 
 export function renderTenorTabs(state, onSelect) {
