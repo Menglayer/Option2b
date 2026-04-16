@@ -4,6 +4,7 @@ import { generateData, buildFromDeribit } from './src/data.js';
 import { applyUserTargets } from './src/filters.js';
 import { renderAll, renderTenorTabs, showLoading, updatePriceDisplay } from './src/render.js';
 import { calculateProfit } from './src/features/calculator.js';
+import { renderRecommendations } from './src/features/recommend.js';
 import { toggleOracle, sendOracleMsg } from './src/features/oracle.js';
 
 const GREEKS_DATA = [
@@ -117,6 +118,7 @@ async function init() {
     state.lastUpdate = new Date();
     renderAll(state);
     renderTenorTabs(state, setTenorTab);
+    renderRecommendations(state);
     renderKnowledgePanels();
     updateVolatilityInsights();
   } catch (err) {
@@ -133,6 +135,7 @@ async function init() {
     syncMarketInputs();
     renderAll(state);
     renderTenorTabs(state, setTenorTab);
+    renderRecommendations(state);
     renderKnowledgePanels();
     updateVolatilityInsights();
   }
@@ -178,6 +181,7 @@ function switchType(type) {
     state.lastUpdate = new Date();
     renderAll(state);
     renderTenorTabs(state, setTenorTab);
+    renderRecommendations(state);
     updateVolatilityInsights();
   }
 }
@@ -197,12 +201,14 @@ function handleTargetsChange() {
   state.lastUpdate = new Date();
   renderAll(state);
   renderTenorTabs(state, setTenorTab);
+  renderRecommendations(state);
   updateVolatilityInsights();
 }
 
 function recalc() {
   state.notional = parseFloat(document.getElementById('notionalInput').value) || 1000;
   renderAll(state);
+  renderRecommendations(state);
   updateVolatilityInsights();
 }
 
