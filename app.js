@@ -322,6 +322,42 @@ function runStrategyComparison() {
   }
 }
 
+function setupUxMotion() {
+  const revealNodes = document.querySelectorAll('.panel, .summary-card, .control-bar');
+  revealNodes.forEach(el => {
+    el.classList.add('ux-reveal');
+  });
+
+  const io = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('show');
+      }
+    }
+  }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+
+  revealNodes.forEach(el => {
+    io.observe(el);
+  });
+
+  const cards = document.querySelectorAll('.summary-card, .panel');
+  cards.forEach(card => {
+    card.classList.add('tilt-card');
+    card.addEventListener('mousemove', e => {
+      if (window.matchMedia('(max-width: 980px)').matches) return;
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width;
+      const y = (e.clientY - r.top) / r.height;
+      const rx = (0.5 - y) * 3.2;
+      const ry = (x - 0.5) * 4.2;
+      card.style.transform = `translateY(-1px) perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+}
+
 function syncMarketInputs() {
   const p = Math.round(state.price || 0);
   if (!p) return;
@@ -340,6 +376,7 @@ function syncMarketInputs() {
 document.addEventListener('DOMContentLoaded', () => {
   playEntrySplash();
   init();
+  setupUxMotion();
 
   // Buttons
   document.getElementById('refreshBtn')?.addEventListener('click', fetchAllData);
