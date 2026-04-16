@@ -13,4 +13,5 @@ export const state = {
   rawOptions: [],
   lastUpdate: null,
   loading: false,
+  mode: 'online', // online | local
 };

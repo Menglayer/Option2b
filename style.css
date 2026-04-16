@@ -420,6 +420,23 @@ button:hover {
   border-color: transparent;
   font-weight: 600;
 }
+
+.api-toggle {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  font-weight: 600;
+}
+.api-toggle[data-mode="local"] {
+  border-color: #fca5a5;
+  color: #b91c1c;
+  background: #fef2f2;
+}
+.api-toggle[data-mode="online"] {
+  border-color: #99f6e4;
+  color: #0f766e;
+  background: #ecfeff;
+}
 .refresh-btn:hover { filter: brightness(0.98); }
 
 .update-time {
@@ -432,6 +449,10 @@ button:hover {
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   margin-bottom: 12px;
+}
+
+.summary-row-1x3 {
+  grid-template-columns: repeat(3, 1fr);
 }
 .summary-card {
   display: flex;
