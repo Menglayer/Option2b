@@ -82,6 +82,7 @@ async function init() {
     }
 
     updatePriceDisplay(state);
+    syncMarketInputs();
 
     if (state.mode === 'online') {
       let deribitData = null;
@@ -101,6 +102,7 @@ async function init() {
         state.products = out.products;
         state.options = out.options;
       }
+
     } else {
       const out = generateData(state.price, state.type);
       state.products = out.products;
@@ -128,6 +130,7 @@ async function init() {
     applyUserTargets(state);
     state.lastUpdate = new Date();
     updatePriceDisplay(state);
+    syncMarketInputs();
     renderAll(state);
     renderTenorTabs(state, setTenorTab);
     renderKnowledgePanels();
@@ -319,6 +322,21 @@ function runStrategyComparison() {
   }
 }
 
+function syncMarketInputs() {
+  const p = Math.round(state.price || 0);
+  if (!p) return;
+
+  const calcPrice = document.getElementById('calcPrice');
+  const calcStrike = document.getElementById('calcStrike');
+  const simCurrent = document.getElementById('simCurrent');
+  const simStrike = document.getElementById('simStrike');
+
+  if (calcPrice && (!calcPrice.value || Number(calcPrice.value) <= 0)) calcPrice.value = String(p);
+  if (calcStrike && (!calcStrike.value || Number(calcStrike.value) <= 0)) calcStrike.value = String(Math.round(p * (state.type === 'CALL' ? 1.03 : 0.97)));
+  if (simCurrent && (!simCurrent.value || Number(simCurrent.value) <= 0)) simCurrent.value = String(p);
+  if (simStrike && (!simStrike.value || Number(simStrike.value) <= 0)) simStrike.value = String(Math.round(p * (state.type === 'CALL' ? 1.03 : 0.97)));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   playEntrySplash();
   init();
@@ -348,6 +366,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const modeHint = document.getElementById('modeHint');
   if (modeHint) modeHint.textContent = state.mode === 'online' ? '实时接口优先' : '离线生成数据';
   renderTenorTabs(state, setTenorTab);
+
+  // default principal: 100000
+  const n1 = document.getElementById('notionalInput');
+  if (n1 && (!n1.value || Number(n1.value) < 100000)) n1.value = '100000';
+  const n2 = document.getElementById('simNotional');
+  if (n2 && (!n2.value || Number(n2.value) < 100000)) n2.value = '100000';
+  state.notional = 100000;
 
   tDays?.addEventListener('change', handleTargetsChange);
   tPrice?.addEventListener('change', handleTargetsChange);

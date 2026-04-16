@@ -1,6 +1,6 @@
 export const state = {
   type: 'CALL',
-  notional: 1000,
+  notional: 100000,
   targetDays: 1,
   targetPrice: null,
   lockTarget: false,

@@ -191,3 +191,5 @@ export function buildFromDeribit(rows, type, currentPrice) {
     options: mergedOptions.slice(0, 30),
   };
 }
+
+// (Static-only GitHub Pages build) Keep data generation fully client-side.
