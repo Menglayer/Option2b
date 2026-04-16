@@ -757,6 +757,25 @@ tbody tr:hover {
   letter-spacing: .005em;
 }
 
+.cta-subline {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: #0f766e;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cta-subline::before {
+  content: "";
+  width: 26px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0ea5a6, #0284c7);
+}
+
 .cta-links {
   margin: 0 0 6px;
   display: inline-flex;
