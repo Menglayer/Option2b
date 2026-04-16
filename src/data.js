@@ -1,4 +1,4 @@
-import { labelByDays, parseDeribitDateToken } from './utils.js';
+import { labelByDays, parseDeribitDateToken, calcDelta } from './utils.js';
 
 export function generateData(price, type, coin = 'BTC') {
   const p = Math.round(price);
@@ -34,6 +34,7 @@ export function generateData(price, type, coin = 'BTC') {
       const optionApr = baseApr + (Math.random() * 6 - 3);
       const hiddenSpread = ex.spread + (Math.random() * 0.08);
       const dualApr = optionApr * (1 - hiddenSpread);
+      const delta = calcDelta(p, strike, exp.days / 365, 0.5, isCall);
       products.push({
         exchange: ex.name,
         tagClass: ex.tagClass,
@@ -48,6 +49,7 @@ export function generateData(price, type, coin = 'BTC') {
         optionApr: Math.max(optionApr, 5),
         hiddenSpread,
         distance: ((strike / p - 1) * 100).toFixed(1) + '%',
+        delta: Math.abs(delta)
       });
     });
   });
@@ -102,21 +104,24 @@ export function buildFromDeribit(rows, type, currentPrice, coin = 'BTC') {
     const mark = Number(r.mark_price || 0);
     const premiumPct = und > 0 ? mark : 0;
     const apr = premiumPct > 0 ? premiumPct * (365 / days) * 100 : 0;
-    return {
-      exchange: 'Deribit',
-      tagClass: 'deribit',
-      strikePrice: strike,
-      optionType: type,
-      expiryDays: Math.max(1, Math.round(days)),
-      expiry: labelByDays(Math.round(days)),
-      bid,
-      ask,
-      mid: mark,
-      apr: Math.max(0, apr),
-      liquidity: Number(r.volume_usd || 0),
-      distanceAbs: Math.abs(strike - und),
-      underlying: und,
-    };
+      const iv = Number(r.mark_iv) / 100 || 0.5;
+      const delta = calcDelta(und > 0 ? und : currentPrice, strike, days / 365, iv, type === 'CALL');
+      return {
+        exchange: 'Deribit',
+        tagClass: 'deribit',
+        strikePrice: strike,
+        optionType: type,
+        expiryDays: Math.max(1, Math.round(days)),
+        expiry: labelByDays(Math.round(days)),
+        bid,
+        ask,
+        mid: mark,
+        apr: Math.max(0, apr),
+        liquidity: Number(r.volume_usd || 0),
+        distanceAbs: Math.abs(strike - und),
+        underlying: und,
+        delta: Math.abs(delta)
+      };
   }).filter(Boolean);
 
   const und = currentPrice || parsed[0]?.underlying || 0;
@@ -171,6 +176,7 @@ export function buildFromDeribit(rows, type, currentPrice, coin = 'BTC') {
         optionApr: Math.max(0.8, s.apr),
         hiddenSpread: hidden,
         distance: `${distance >= 0 ? '+' : ''}${distance.toFixed(1)}%`,
+        delta: s.delta || 0,
       });
     }
   }

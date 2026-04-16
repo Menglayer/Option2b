@@ -10,33 +10,21 @@ export function renderRecommendations(state) {
   }
 
   // Helper
-  const distVal = p => Math.abs(parseFloat(String(p.distance).replace('%', '').replace('+', '')) || 0);
+  const getClosestByDelta = (targetDelta, exclude) => {
+    const sorted = [...state.products]
+      .filter(p => !exclude.includes(p.strikePrice))
+      .sort((a, b) => Math.abs((a.delta || 0) - targetDelta) - Math.abs((b.delta || 0) - targetDelta));
+    return sorted[0];
+  };
 
-  // Strategy 1: Safe and Stable (稳健收租)
-  // Target: Most conservative (largest distance from current price)
-  const safeSorted = [...state.products].sort((a, b) => distVal(b) - distVal(a));
-  const safePick = safeSorted[0];
-
-  // Strategy 2: High Yield (高息摸奖)
-  // Target: Highest APY, naturally these are closer to ATM
-  const yieldSorted = [...state.products].sort((a, b) => b.optionApr - a.optionApr);
-  // Pick one that is noticeably closer to the money compared to the safe pick
-  const yieldPick = yieldSorted.find(p => distVal(p) < distVal(safePick) - 2.0) || yieldSorted.find(p => p.strikePrice !== safePick.strikePrice) || yieldSorted[0];
-
-  // Strategy 3: Lowest Fee / Smart Option (良心真期权)
-  // Target: Lowest CEX markup (gap), ideally finding a middle-ground distance
-  const smartSorted = [...state.products].sort((a, b) => {
-    const gapPctA = ((a.optionApr - a.dualApr) / Math.max(a.optionApr, 0.1)) * 100;
-    const gapPctB = ((b.optionApr - b.dualApr) / Math.max(b.optionApr, 0.1)) * 100;
-    return gapPctA - gapPctB;
-  });
-  // Prefer a product that falls somewhere between safe and yield distances, guaranteeing different strikes
-  const smartPick = smartSorted.find(p => p.strikePrice !== safePick.strikePrice && p.strikePrice !== yieldPick.strikePrice) || smartSorted.find(p => p !== safePick && p !== yieldPick) || smartSorted[0];
+  const safePick = getClosestByDelta(0.15, []);
+  const smartPick = getClosestByDelta(0.25, safePick ? [safePick.strikePrice] : []);
+  const yieldPick = getClosestByDelta(0.35, safePick && smartPick ? [safePick.strikePrice, smartPick.strikePrice] : []);
 
   const cards = [
-    { pick: safePick, type: 'safe', label: '🛡️ 深潜收租', desc: '距深水区最远，防守空间极大，极度保守稳健' },
-    { pick: smartPick, type: 'smart', label: '💎 性价比之王', desc: '中等距离且隐藏抽水最低，收益风险最均衡' },
-    { pick: yieldPick, type: 'yield', label: '🔥 激进博弈', desc: '距平值最近，被行权概率明显，追求极致收益' }
+    { pick: safePick, type: 'safe', label: '🛡️ 稳健收租', desc: '保守之选（胜率较高，防守空间充足）' },
+    { pick: smartPick, type: 'smart', label: '💎 均衡之选', desc: '中等距离缓冲，收益与风险配置合理' },
+    { pick: yieldPick, type: 'yield', label: '🔥 进阶博弈', desc: '距平值较近，被行权概率增加，追求更高回报' }
   ];
 
   container.innerHTML = cards.map(c => {

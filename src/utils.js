@@ -30,3 +30,17 @@ export function parseDeribitDateToken(token) {
   if (month === undefined) return null;
   return new Date(Date.UTC(year, month, day, 8, 0, 0));
 }
+
+export function approxNormCDF(x) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(x));
+  const d = 0.3989422804 * Math.exp(-x * x / 2);
+  const p = d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + 1.330274429 * t))));
+  return x > 0 ? 1 - p : p;
+}
+
+export function calcDelta(S, K, T, v, isCall) {
+  if (T <= 0 || v <= 0) return isCall ? (S > K ? 1 : 0) : (S < K ? -1 : 0);
+  const d1 = (Math.log(S / K) + (0 + v * v / 2) * T) / (v * Math.sqrt(T));
+  const cdf = approxNormCDF(d1);
+  return isCall ? cdf : cdf - 1;
+}
