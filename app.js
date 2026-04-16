@@ -2,7 +2,7 @@ import { state } from './src/state.js';
 import { api } from './src/api.js';
 import { generateData, buildFromDeribit } from './src/data.js';
 import { applyUserTargets } from './src/filters.js';
-import { renderAll, showLoading, updatePriceDisplay } from './src/render.js';
+import { renderAll, renderTenorTabs, showLoading, updatePriceDisplay } from './src/render.js';
 import { calculateProfit } from './src/features/calculator.js';
 import { toggleOracle, sendOracleMsg } from './src/features/oracle.js';
 
@@ -114,6 +114,7 @@ async function init() {
 
     state.lastUpdate = new Date();
     renderAll(state);
+    renderTenorTabs(state, setTenorTab);
     renderKnowledgePanels();
     updateVolatilityInsights();
   } catch (err) {
@@ -128,6 +129,7 @@ async function init() {
     state.lastUpdate = new Date();
     updatePriceDisplay(state);
     renderAll(state);
+    renderTenorTabs(state, setTenorTab);
     renderKnowledgePanels();
     updateVolatilityInsights();
   }
@@ -169,6 +171,7 @@ function switchType(type) {
     applyUserTargets(state);
     state.lastUpdate = new Date();
     renderAll(state);
+    renderTenorTabs(state, setTenorTab);
     updateVolatilityInsights();
   }
 }
@@ -176,16 +179,18 @@ function switchType(type) {
 function onLockTargetChange() {
   state.lockTarget = !!document.getElementById('lockTarget')?.checked;
   applyUserTargets(state);
+  state.activeTenorTab = 'ALL';
   state.lastUpdate = new Date();
   renderAll(state);
+  renderTenorTabs(state, setTenorTab);
 }
 
 function handleTargetsChange() {
   applyUserTargets(state);
   state.activeTenorTab = 'ALL';
-  syncTenorTabs();
   state.lastUpdate = new Date();
   renderAll(state);
+  renderTenorTabs(state, setTenorTab);
   updateVolatilityInsights();
 }
 
@@ -206,15 +211,8 @@ function reportTenorDistribution() {
 
 function setTenorTab(tab) {
   state.activeTenorTab = tab;
-  syncTenorTabs();
   renderAll(state);
-}
-
-function syncTenorTabs() {
-  document.querySelectorAll('.tenor-tab').forEach(tab => {
-    const active = tab.getAttribute('data-tenor') === state.activeTenorTab;
-    tab.classList.toggle('active', active);
-  });
+  renderTenorTabs(state, setTenorTab);
 }
 
 function toggleMode() {
@@ -335,9 +333,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('oracleBtn')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleClose')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleSend')?.addEventListener('click', sendOracleMsg);
-  document.querySelectorAll('.tenor-tab').forEach(tab => {
-    tab.addEventListener('click', () => setTenorTab(tab.getAttribute('data-tenor') || 'ALL'));
-  });
 
   const tDays = document.getElementById('targetDays');
   if (tDays) tDays.value = String(state.targetDays);
@@ -352,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const modeHint = document.getElementById('modeHint');
   if (modeHint) modeHint.textContent = state.mode === 'online' ? '实时接口优先' : '离线生成数据';
-  syncTenorTabs();
+  renderTenorTabs(state, setTenorTab);
 
   tDays?.addEventListener('change', handleTargetsChange);
   tPrice?.addEventListener('change', handleTargetsChange);

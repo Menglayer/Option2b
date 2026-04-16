@@ -1,5 +1,13 @@
 import { setHtml } from './utils.js';
 
+function normalizeTenorKey(v) {
+  return String(v || '').trim().toUpperCase();
+}
+
+export function getTenorKey(item) {
+  return normalizeTenorKey(item.expiry || `${item.expiryDays || 0}D`);
+}
+
 export function showLoading() {
   setHtml('mainBody', '<tr><td colspan="11" class="loading-cell"><div class="skeleton-text"></div></td></tr>');
 }
@@ -32,8 +40,9 @@ export function renderSummary(state) {
 
 export function renderMainTable(state) {
   const tbody = document.getElementById('mainBody');
+  const activeKey = normalizeTenorKey(state.activeTenorTab || 'ALL');
   const base = state.activeTenorTab && state.activeTenorTab !== 'ALL'
-    ? state.products.filter(p => (p.expiry || `${p.expiryDays}D`) === state.activeTenorTab)
+    ? state.products.filter(p => getTenorKey(p) === activeKey)
     : state.products;
 
   const P = [...base].sort((a, b) => {
@@ -75,6 +84,33 @@ export function renderMainTable(state) {
       <td><span class="tag ${rCls}">${rating}</span></td>
     </tr>`;
   }).join('');
+}
+
+export function renderTenorTabs(state, onSelect) {
+  const box = document.getElementById('tenorTabs');
+  if (!box) return;
+
+  const keys = Array.from(new Set(state.products.map(getTenorKey)))
+    .filter(Boolean)
+    .sort((a, b) => {
+      const na = parseInt(a, 10);
+      const nb = parseInt(b, 10);
+      if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+      return a.localeCompare(b);
+    });
+
+  const tabs = ['ALL', ...keys];
+  const active = normalizeTenorKey(state.activeTenorTab || 'ALL');
+
+  box.innerHTML = tabs.map(k => {
+    const label = k === 'ALL' ? '全部' : k;
+    const cls = k === active ? 'tenor-tab active' : 'tenor-tab';
+    return `<button type="button" class="${cls}" data-tenor="${k}">${label}</button>`;
+  }).join('');
+
+  box.querySelectorAll('.tenor-tab').forEach(btn => {
+    btn.addEventListener('click', () => onSelect(btn.getAttribute('data-tenor') || 'ALL'));
+  });
 }
 
 export function renderOptionsTable(state) {

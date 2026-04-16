@@ -55,9 +55,8 @@ export function generateData(price, type) {
   ];
   const options = [];
   optSources.forEach(src => {
-    strikes.forEach((strike, si) => {
-      const exp = expiries[si];
-      if (!exp) return;
+    expiries.forEach((exp, si) => {
+      const strike = strikes[si % strikes.length] || strikes[0];
       const otmPct = isCall ? (strike / p - 1) : (1 - strike / p);
       const rawPremium = (otmPct * 0.5 + 0.01) * src.markup * (exp.days / 7);
       const bid = rawPremium * 0.94;
