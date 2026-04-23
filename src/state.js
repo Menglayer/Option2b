@@ -18,4 +18,11 @@ export const state = {
   lastUpdate: null,
   loading: false,
   mode: 'online', // online | local
+  theme: 'light', // light | dark
+  notifications: [],
+  realtimeConnected: false,
+  portfolio: [],
+  alerts: [],
+  oracleMode: 'kb', // kb | ai
+  riskFreeRate: 0.03,
 };

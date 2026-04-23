@@ -38,7 +38,7 @@ export function calculateProfit(state) {
 
   setHtml('calcResult', `
     <div style="margin-bottom:8px;color:var(--text)"><strong>参数:</strong> 到期 $${expiryPrice.toLocaleString()} · 执行 $${strike.toLocaleString()} · Prem ${(premPct*100).toFixed(1)}% · 本金 $${N}</div>
-    <div style="margin-bottom:6px"><span style="color:var(--blue)">▶ CALL:</span> <span class="${callProfit >= 0 ? 'positive' : 'negative'}">$${callProfit.toFixed(2)}</span> (${callProfit >= 0 ? '+' : ''}${(callProfit/N*100).toFixed(2)}%)<br/><span class="muted" style="font-size:7px">${callDesc}</span></div>
+    <div style="margin-bottom:6px"><span style="color:var(--brand)">▶ CALL:</span> <span class="${callProfit >= 0 ? 'positive' : 'negative'}">$${callProfit.toFixed(2)}</span> (${callProfit >= 0 ? '+' : ''}${(callProfit/N*100).toFixed(2)}%)<br/><span class="muted" style="font-size:7px">${callDesc}</span></div>
     <div><span style="color:var(--green)">▶ PUT:</span> <span class="${putProfit >= 0 ? 'positive' : 'negative'}">$${putProfit.toFixed(2)}</span> (${putProfit >= 0 ? '+' : ''}${(putProfit/N*100).toFixed(2)}%)<br/><span class="muted" style="font-size:7px">${putDesc}</span></div>
   `);
 }

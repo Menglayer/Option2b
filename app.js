@@ -5,7 +5,61 @@ import { applyUserTargets } from './src/filters.js';
 import { renderAll, renderTenorTabs, showLoading, updatePriceDisplay } from './src/render.js';
 import { calculateProfit } from './src/features/calculator.js';
 import { renderRecommendations } from './src/features/recommend.js';
-import { toggleOracle, sendOracleMsg } from './src/features/oracle.js';
+import { toggleOracle, sendOracleMsg, setOracleAiProvider } from './src/features/oracle.js';
+import { runStrategyBuilder } from './src/features/strategy.js';
+import { loadPortfolio, addPosition, renderPortfolio } from './src/features/portfolio.js';
+import { addAlert, renderAlerts, checkAlerts } from './src/features/alerts.js';
+import { connectDeribitWs } from './src/realtime/deribitSocket.js';
+import { greeks } from './src/utils.js';
+
+let realtimeSocket = null;
+
+function toast(msg) {
+  const root = document.getElementById('toastRoot');
+  if (!root) return;
+  const n = document.createElement('div');
+  n.className = 'toast';
+  n.textContent = msg;
+  root.appendChild(n);
+  setTimeout(() => n.remove(), 2600);
+}
+
+function applyTheme(theme) {
+  state.theme = theme;
+  document.body.classList.toggle('theme-dark', theme === 'dark');
+  const btn = document.getElementById('themeToggle');
+  if (btn) {
+    btn.dataset.theme = theme;
+    btn.textContent = theme === 'dark' ? '深色主题' : '浅色主题';
+  }
+}
+
+function toggleTheme() {
+  applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+}
+
+function setupRealtime() {
+  if (realtimeSocket) {
+    try { realtimeSocket.close(); } catch { /* noop */ }
+    realtimeSocket = null;
+  }
+  realtimeSocket = connectDeribitWs({
+    coin: state.coin,
+    onTick: (p) => {
+      state.price = Number(p) || state.price;
+      updatePriceDisplay(state);
+      updateVolatilityInsights();
+      renderPortfolio(state);
+      checkAlerts(state, toast);
+      renderAlerts(state);
+    },
+    onStatus: (ok) => {
+      state.realtimeConnected = !!ok;
+      const hint = document.getElementById('modeHint');
+      if (hint) hint.textContent = ok ? '实时接口优先 · WS已连接' : '实时接口优先 · WS未连接';
+    },
+  });
+}
 
 const GREEKS_DATA = [
   { symbol: 'Δ Delta', name: '价格敏感度', desc: '标的价格每变化 1%，期权价格的变化倾向。常被视为近似行权概率。' },
@@ -122,8 +176,13 @@ async function init() {
     renderRecommendations(state);
     renderKnowledgePanels();
     updateVolatilityInsights();
+    renderPortfolio(state);
+    renderAlerts(state);
+    checkAlerts(state, toast);
+    if (state.mode === 'online') setupRealtime();
   } catch (err) {
     console.error('Init failed:', err);
+    toast('初始化失败，已回退到本地模拟数据');
     state.price = state.price || (state.coin === 'ETH' ? 3000 : 97000);
     const out = generateData(state.price, state.type, state.coin);
     state.products = out.products;
@@ -139,6 +198,8 @@ async function init() {
     renderRecommendations(state);
     renderKnowledgePanels();
     updateVolatilityInsights();
+    renderPortfolio(state);
+    renderAlerts(state);
   }
 }
 
@@ -157,6 +218,7 @@ async function fetchAllData() {
   if(expBtn) expBtn.disabled = false;
   btn.textContent = '🔄 刷新';
   state.loading = false;
+  toast('数据刷新完成');
 }
 
 function switchType(type) {
@@ -239,6 +301,10 @@ function toggleMode() {
   if (hint) {
     hint.textContent = state.mode === 'online' ? '实时接口优先' : '离线生成数据';
   }
+  if (state.mode !== 'online' && realtimeSocket) {
+    try { realtimeSocket.close(); } catch { /* noop */ }
+    realtimeSocket = null;
+  }
   fetchAllData();
 }
 
@@ -279,6 +345,7 @@ function exportToCSV() {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  toast('CSV导出成功');
 }
 
 function renderKnowledgePanels() {
@@ -327,6 +394,14 @@ function updateVolatilityInsights() {
   const breakEvenPx = state.type === 'CALL'
     ? strike * (1 + optionApr / 100 * (days / 365))
     : strike * (1 - optionApr / 100 * (days / 365));
+  const g = greeks({
+    S: Math.max(current, 1),
+    K: Math.max(strike, 1),
+    T: Math.max(days, 1) / 365,
+    v: Math.max(iv, 1) / 100,
+    r: state.riskFreeRate || 0.03,
+    isCall: state.type === 'CALL',
+  });
 
   const ivEl = document.getElementById('ivValue');
   const probEl = document.getElementById('exerciseProb');
@@ -340,7 +415,8 @@ function updateVolatilityInsights() {
     insightEl.innerHTML = `
       当前模式：<strong>${state.mode === 'online' ? '在线实时' : '本地模拟'}</strong><br/>
       估算解释：IV 高代表权利金更贵；行权概率越高，策略被动成交的可能性越大。<br/>
-      当前 ${state.type} 方向下，建议优先关注 ${days} 天附近合约与执行价 ${strike.toLocaleString()}。`;
+      当前 ${state.type} 方向下，建议优先关注 ${days} 天附近合约与执行价 ${strike.toLocaleString()}。<br/>
+      Greeks：Δ ${g.delta.toFixed(3)} · Γ ${g.gamma.toFixed(4)} · ν ${g.vega.toFixed(3)} · Θ ${g.theta.toFixed(3)} · ρ ${g.rho.toFixed(3)}`;
   }
 }
 
@@ -530,8 +606,16 @@ function syncMarketInputs() {
 
 document.addEventListener('DOMContentLoaded', () => {
   playEntrySplash();
+  loadPortfolio(state);
   init();
   setupUxMotion();
+  applyTheme(state.theme);
+  setOracleAiProvider(async (question) => {
+    const q = question.toLowerCase();
+    if (q.includes('delta') || q.includes('希腊')) return '建议优先结合 Delta 与 Gamma 观察近月仓位风险，再用 Theta 对冲时间衰减影响。';
+    if (q.includes('iv')) return 'IV 高位时卖方策略更有优势，但要同时看期限结构和极端波动尾部风险。';
+    return 'AI模式当前为内置增强回答。若需接真实大模型，可将此入口对接后端API并保留KB降级。';
+  });
 
   // Asset Tracker Switch
   document.querySelectorAll('#assetToggle button').forEach(b => {
@@ -542,10 +626,28 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('refreshBtn')?.addEventListener('click', fetchAllData);
   document.getElementById('exportBtn')?.addEventListener('click', exportToCSV);
   document.getElementById('modeToggle')?.addEventListener('click', toggleMode);
+  document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
   document.getElementById('btnCall')?.addEventListener('click', () => switchType('CALL'));
   document.getElementById('btnPut')?.addEventListener('click', () => switchType('PUT'));
   document.getElementById('calcBtn')?.addEventListener('click', () => calculateProfit(state));
   document.getElementById('simCalcBtn')?.addEventListener('click', runStrategyComparison);
+  document.getElementById('strategyRunBtn')?.addEventListener('click', () => runStrategyBuilder(state));
+  document.getElementById('pfAddBtn')?.addEventListener('click', () => {
+    if (addPosition(state)) {
+      renderPortfolio(state);
+      toast('持仓已添加');
+    } else {
+      toast('请先填写完整持仓参数');
+    }
+  });
+  document.getElementById('alertAddBtn')?.addEventListener('click', () => {
+    if (addAlert(state)) {
+      renderAlerts(state);
+      toast('预警已添加');
+    } else {
+      toast('请输入有效阈值');
+    }
+  });
   document.getElementById('sortBySelect')?.addEventListener('change', e => {
     state.sortBy = e.target.value;
     renderAll(state);
@@ -576,6 +678,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const modeHint = document.getElementById('modeHint');
   if (modeHint) modeHint.textContent = state.mode === 'online' ? '实时接口优先' : '离线生成数据';
   renderTenorTabs(state, setTenorTab);
+  renderPortfolio(state);
+  renderAlerts(state);
 
   // default principal: 100000
   const n1 = document.getElementById('notionalInput');
@@ -613,6 +717,9 @@ document.addEventListener('DOMContentLoaded', () => {
       state.change24h = change24h;
       updatePriceDisplay(state);
       updateVolatilityInsights();
+      renderPortfolio(state);
+      checkAlerts(state, toast);
+      renderAlerts(state);
     } catch {
       // noop
     }

@@ -1,4 +1,4 @@
-import { labelByDays, parseDeribitDateToken, calcDelta } from './utils.js';
+import { labelByDays, parseDeribitDateToken, calcDelta, greeks, impliedVolatility } from './utils.js';
 
 export function generateData(price, type, coin = 'BTC') {
   const p = Math.round(price);
@@ -104,7 +104,24 @@ export function buildFromDeribit(rows, type, currentPrice, coin = 'BTC') {
     const mark = Number(r.mark_price || 0);
     const premiumPct = und > 0 ? mark : 0;
     const apr = premiumPct > 0 ? premiumPct * (365 / days) * 100 : 0;
-      const iv = Number(r.mark_iv) / 100 || 0.5;
+      const markIv = Number(r.mark_iv) / 100;
+      const marketPrice = Math.max(0, mark * (und > 0 ? und : currentPrice || 0));
+      const iv = markIv > 0 ? markIv : impliedVolatility({
+        marketPrice,
+        S: und > 0 ? und : currentPrice,
+        K: strike,
+        T: days / 365,
+        r: 0.03,
+        isCall: type === 'CALL',
+      });
+      const g = greeks({
+        S: und > 0 ? und : currentPrice,
+        K: strike,
+        T: days / 365,
+        v: iv,
+        r: 0.03,
+        isCall: type === 'CALL',
+      });
       const delta = calcDelta(und > 0 ? und : currentPrice, strike, days / 365, iv, type === 'CALL');
       return {
         exchange: 'Deribit',
@@ -120,7 +137,12 @@ export function buildFromDeribit(rows, type, currentPrice, coin = 'BTC') {
         liquidity: Number(r.volume_usd || 0),
         distanceAbs: Math.abs(strike - und),
         underlying: und,
-        delta: Math.abs(delta)
+        iv,
+        delta: Math.abs(delta),
+        gamma: g.gamma,
+        vega: g.vega,
+        theta: g.theta,
+        rho: g.rho,
       };
   }).filter(Boolean);
 
@@ -177,6 +199,11 @@ export function buildFromDeribit(rows, type, currentPrice, coin = 'BTC') {
         hiddenSpread: hidden,
         distance: `${distance >= 0 ? '+' : ''}${distance.toFixed(1)}%`,
         delta: s.delta || 0,
+        iv: s.iv || 0.5,
+        gamma: s.gamma || 0,
+        vega: s.vega || 0,
+        theta: s.theta || 0,
+        rho: s.rho || 0,
       });
     }
   }

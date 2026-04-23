@@ -6,6 +6,12 @@ const KB = [
   { k: ['hello','你好','help','帮助'], a: '你好，我可以解答双币理财、期权对比、APY差异和风险问题。' },
 ];
 
+let aiProvider = null;
+
+export function setOracleAiProvider(fn) {
+  aiProvider = typeof fn === 'function' ? fn : null;
+}
+
 function md(t) {
   return t
     .replace(/&/g, '&amp;')
@@ -48,7 +54,14 @@ export function sendOracleMsg() {
   const input = document.getElementById('oracleInput');
   const text = input.value.trim();
   if (!text) return;
+  const aiMode = !!document.getElementById('oracleAiToggle')?.checked;
   addMsg('user', text);
   input.value = '';
+  if (aiMode && aiProvider) {
+    aiProvider(text)
+      .then((ans) => addMsg('ai', ans || findAnswer(text)))
+      .catch(() => addMsg('ai', findAnswer(text)));
+    return;
+  }
   setTimeout(() => addMsg('ai', findAnswer(text)), 280);
 }

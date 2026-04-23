@@ -1,5 +1,3 @@
-import { setHtml } from '../utils.js';
-
 export function renderRecommendations(state) {
   const container = document.getElementById('recommendGrid');
   if (!container) return;

@@ -6,13 +6,18 @@
   <title>2B-Options</title>
   <meta name="description" content="实时对比 BTC 双币理财与期权卖出收益，揭示交易所隐藏成本" />
   <meta name="theme-color" content="#ffffff" />
+  <meta property="og:title" content="2B-Options" />
+  <meta property="og:description" content="BTC/ETH 双币理财 vs 期权收益对比与策略分析" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
   <link rel="icon" type="image/svg+xml" href="./assets/favicon-XadOwyfL.svg" />
   <link rel="apple-touch-icon" href="./assets/favicon-XadOwyfL.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script type="module" crossorigin src="./assets/index-BiLrXvKy.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-DwqPoJpt.css">
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <script type="module" crossorigin src="./assets/index-DDUYAh0B.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BhVH_qZy.css">
 </head>
 <body>
   <!-- Entry Splash -->
@@ -44,8 +49,12 @@
       </div>
       <div class="header-top">
         <h1>2B-Options</h1>
+        <div class="asset-toggle" id="assetToggle">
+          <button class="active" data-coin="BTC">BTC</button>
+          <button data-coin="ETH">ETH</button>
+        </div>
         <div class="price-badge" id="priceBadge">
-          <span class="price-label">BTC</span>
+          <span class="price-label" id="priceCoinLabel">BTC</span>
           <span class="price-value" id="livePrice">--</span>
           <span class="price-change" id="priceChange"></span>
         </div>
@@ -103,10 +112,14 @@
         </select>
       </div>
       <div class="control-right">
+        <button type="button" class="export-btn" id="exportBtn" disabled title="导出CSV (E)">💾 导出</button>
+        <button type="button" class="api-toggle" id="themeToggle" data-theme="light">浅色主题</button>
         <button type="button" class="api-toggle" id="modeToggle" data-mode="online">在线模式</button>
-        <button type="button" class="refresh-btn" id="refreshBtn">🔄 刷新数据</button>
-        <span class="update-time" id="modeHint"></span>
-        <span class="update-time" id="lastUpdate"></span>
+        <button type="button" class="refresh-btn" id="refreshBtn" title="刷新数据 (R)">🔄 刷新</button>
+        <div class="update-info-col">
+          <span class="update-time" id="modeHint"></span>
+          <span class="update-time" id="lastUpdate"></span>
+        </div>
       </div>
     </section>
 
@@ -170,6 +183,16 @@
       </div>
     </section>
 
+    <!-- AI Recommendation -->
+    <section class="panel ai-recommend-panel" id="recommendPanel" style="margin-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+         <h2>💡 AI 期权智能推荐 <span class="table-hint">基于波动率与胜率优选</span></h2>
+      </div>
+      <div class="grid-3col" id="recommendGrid">
+         <div class="muted center" style="grid-column: 1 / -1; padding: 20px;">正在穿透 CEX 隐藏费率，分析全网数据...</div>
+      </div>
+    </section>
+
     <!-- Main Table -->
     <section class="panel main-table-panel">
       <h2>💰 收益差距分析 <span class="table-hint" id="productCount"></span></h2>
@@ -180,13 +203,13 @@
             <tr>
               <th>交易所</th>
               <th>方向</th>
-              <th>执行价</th>
-              <th>距离</th>
+              <th class="sortable" data-sort="strike">执行价</th>
+              <th class="sortable" data-sort="distance">距离</th>
               <th>双币到期</th>
               <th>期权到期</th>
               <th>双币 APY</th>
-              <th>期权 APY</th>
-              <th>隐藏价差</th>
+              <th class="sortable" data-sort="apy">期权 APY</th>
+              <th class="sortable" data-sort="spread">隐藏价差</th>
               <th>CEX抽水 $</th>
               <th>流动性</th>
               <th>评级</th>
@@ -330,7 +353,65 @@
 
     <section class="panel" id="payoffPanel" style="margin-top:12px;">
       <h2>📉 到期收益曲线</h2>
-      <canvas id="payoffCanvas" width="1100" height="260" style="width:100%;height:260px;border:1px solid var(--line);border-radius:10px;background:#fff;"></canvas>
+      <canvas id="payoffCanvas" width="1100" height="260" style="width:100%;height:260px;border:1px solid var(--line);border-radius:10px;background:var(--surface);"></canvas>
+    </section>
+
+    <section class="panel" id="strategyBuilderPanel" style="margin-top:12px;">
+      <h2>🧩 多腿策略构建器</h2>
+      <div class="calc-grid strategy-grid">
+        <div class="calc-field">
+          <label>策略类型</label>
+          <select id="strategyType">
+            <option value="call_spread">牛市看涨价差</option>
+            <option value="short_straddle">卖出跨式</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>现价</label><input type="number" id="strategySpot" step="100" /></div>
+        <div class="calc-field"><label>天数</label><input type="number" id="strategyDays" value="7" min="1" step="1" /></div>
+        <div class="calc-field"><label>Leg1 执行价</label><input type="number" id="leg1Strike" step="100" /></div>
+        <div class="calc-field"><label>Leg2 执行价</label><input type="number" id="leg2Strike" step="100" /></div>
+        <div class="calc-field"><label>IV %</label><input type="number" id="strategyIv" value="60" min="1" max="400" step="0.1" /></div>
+        <div class="calc-field"><label>乘数</label><input type="number" id="strategyNotional" value="1" min="0.1" step="0.1" /></div>
+      </div>
+      <button type="button" class="calc-btn" id="strategyRunBtn">生成策略收益</button>
+      <div id="strategyResult" class="calc-result"></div>
+      <canvas id="strategyCanvas" width="1100" height="260" style="width:100%;height:260px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-top:10px;"></canvas>
+    </section>
+
+    <section class="panel" id="portfolioPanel" style="margin-top:12px;">
+      <h2>📦 仓位追踪</h2>
+      <div class="calc-grid strategy-grid">
+        <div class="calc-field"><label>方向</label><select id="pfSide"><option>SELL</option><option>BUY</option></select></div>
+        <div class="calc-field"><label>类型</label><select id="pfType"><option>CALL</option><option>PUT</option></select></div>
+        <div class="calc-field"><label>执行价</label><input type="number" id="pfStrike" step="100" /></div>
+        <div class="calc-field"><label>数量</label><input type="number" id="pfQty" step="0.01" /></div>
+        <div class="calc-field"><label>权利金</label><input type="number" id="pfPremium" step="0.01" /></div>
+      </div>
+      <button type="button" class="calc-btn" id="pfAddBtn">添加持仓</button>
+      <div id="portfolioSummary" class="calc-result">持仓 0 条</div>
+      <div class="table-wrapper scrollbar-thin">
+        <table>
+          <thead><tr><th>币种</th><th>方向</th><th>类型</th><th>执行价</th><th>数量</th><th>权利金</th><th>PnL</th></tr></thead>
+          <tbody id="portfolioBody"><tr><td colspan="7" class="muted center">暂无持仓</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="alertsPanel" style="margin-top:12px;">
+      <h2>🚨 预警中心</h2>
+      <div class="calc-grid strategy-grid">
+        <div class="calc-field">
+          <label>触发条件</label>
+          <select id="alertType">
+            <option value="price_above">价格高于</option>
+            <option value="price_below">价格低于</option>
+            <option value="iv_above">IV 高于</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>阈值</label><input type="number" id="alertValue" step="0.1" /></div>
+      </div>
+      <button type="button" class="calc-btn" id="alertAddBtn">添加预警</button>
+      <div id="alertList" class="calc-result muted">暂无预警</div>
     </section>
 
     <section class="panel" id="faqPanel" style="margin-top:12px;">
@@ -339,8 +420,8 @@
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
-      <p class="muted">Data for reference only</p>
+    <footer class="footer" style="padding: 24px 0; text-align: center;">
+      <p class="muted" style="font-size: 13px; font-weight: 500;">⚠️ 郑重声明：全站测算模型及链上数据抓取可能存在延迟或误差。非投资建议，数据仅供参考，交易期权及双币理财伴随高风险，请自行研判并盈亏自负。</p>
     </footer>
   </div>
 
@@ -354,9 +435,21 @@
     <div class="oracle-msgs" id="oracleMessages"></div>
     <div class="oracle-footer">
       <textarea class="oracle-input" id="oracleInput" placeholder="输入问题... (Enter 发送)" rows="2"></textarea>
+      <div class="oracle-mode-row">
+        <label><input type="checkbox" id="oracleAiToggle" /> AI 模式</label>
+      </div>
       <button type="button" class="oracle-send" id="oracleSend">发送</button>
     </div>
   </div>
 
+  <div id="toastRoot" class="toast-root" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>
