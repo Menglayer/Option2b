@@ -166,11 +166,7 @@ export function renderMainTable(state) {
     // Also attach click listeners to headers for quick sort!
     th.style.cursor = 'pointer';
     th.onclick = () => {
-      const select = document.getElementById('sortBySelect');
-      if (select) {
-        select.value = th.getAttribute('data-sort');
-        select.dispatchEvent(new Event('change'));
-      }
+      document.dispatchEvent(new CustomEvent('updateSortBy', { detail: th.getAttribute('data-sort') }));
     };
   });
 }

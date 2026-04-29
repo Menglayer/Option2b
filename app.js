@@ -716,35 +716,14 @@ document.addEventListener('DOMContentLoaded', () => {
       toast('请输入有效阈值');
     }
   });
-  document.getElementById('sortBySelect')?.addEventListener('change', e => {
-    state.sortBy = e.target.value;
-    renderAll(state);
-  });
-  document.getElementById('moneynessSelect')?.addEventListener('change', e => {
-    state.moneynessFilter = e.target.value;
+  document.addEventListener('updateSortBy', e => {
+    state.sortBy = e.detail;
     renderAll(state);
   });
   document.getElementById('calcPremium')?.addEventListener('change', drawPayoffCurve);
   document.getElementById('calcStrike')?.addEventListener('change', drawPayoffCurve);
   document.getElementById('simDays')?.addEventListener('change', renderScenarioMatrix);
   document.getElementById('simOptionApr')?.addEventListener('change', renderScenarioMatrix);
-  document.getElementById('minLiquidityInput')?.addEventListener('change', e => {
-    state.minLiquidity = Math.max(0, Number(e.target.value) || 0);
-    renderAll(state);
-    renderRecommendations(state);
-  });
-  document.getElementById('minOptionAprInput')?.addEventListener('change', e => {
-    state.minOptionApr = Math.max(0, Number(e.target.value) || 0);
-    renderAll(state);
-    renderRecommendations(state);
-  });
-  document.getElementById('maxTakeRateInput')?.addEventListener('change', e => {
-    const v = Number(e.target.value);
-    state.maxTakeRate = Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : 100;
-    e.target.value = String(state.maxTakeRate);
-    renderAll(state);
-    renderRecommendations(state);
-  });
   document.getElementById('oracleBtn')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleClose')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleSend')?.addEventListener('click', sendOracleMsg);

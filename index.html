@@ -82,14 +82,14 @@
 
     <!-- Control Panel -->
     <section class="control-panel panel">
-      <!-- Top Row: Core Controls & Actions -->
-      <div class="control-top-row">
-        <!-- Left: Call/Put -->
-        <div class="control-left">
-          <button type="button" class="type-btn active" id="btnCall">📈 CALL 看涨</button>
-          <button type="button" class="type-btn" id="btnPut">📉 PUT 看跌</button>
-        </div>
-        
+      <!-- Row 1: Type Selection -->
+      <div class="control-type-row">
+        <button type="button" class="type-btn active" id="btnCall">📈 CALL 看涨</button>
+        <button type="button" class="type-btn" id="btnPut">📉 PUT 看跌</button>
+      </div>
+
+      <!-- Row 2: Main Controls & Actions -->
+      <div class="control-main-row">
         <!-- Primary Inputs -->
         <div class="control-primary-inputs">
           <div class="control-item">
@@ -122,38 +122,6 @@
             <span class="update-time" id="modeHint"></span>
             <span class="update-time" id="lastUpdate"></span>
           </div>
-        </div>
-      </div>
-
-      <!-- Bottom Row: Filters -->
-      <div class="control-filters-row">
-        <div class="control-item">
-          <label for="sortBySelect">排序</label>
-          <select id="sortBySelect">
-            <option value="spread">按价差</option>
-            <option value="apy">按期权APY</option>
-            <option value="distance">按执行价距离</option>
-          </select>
-        </div>
-        <div class="control-item">
-          <label for="moneynessSelect">价内外</label>
-          <select id="moneynessSelect">
-            <option value="ALL">全部</option>
-            <option value="ATM">近平值</option>
-            <option value="OTM">虚值</option>
-          </select>
-        </div>
-        <div class="control-item control-item-sm">
-          <label for="minLiquidityInput">最小流动性</label>
-          <input type="number" id="minLiquidityInput" value="0" min="0" step="1" />
-        </div>
-        <div class="control-item control-item-sm">
-          <label for="minOptionAprInput">最小期权APY%</label>
-          <input type="number" id="minOptionAprInput" value="0" min="0" step="0.1" />
-        </div>
-        <div class="control-item control-item-sm">
-          <label for="maxTakeRateInput">最大抽水率%</label>
-          <input type="number" id="maxTakeRateInput" value="100" min="0" max="100" step="1" />
         </div>
       </div>
     </section>
