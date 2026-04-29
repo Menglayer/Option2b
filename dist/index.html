@@ -16,8 +16,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <script type="module" crossorigin src="./assets/index-BoNUjMUi.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-D-CkOdFg.css">
+  <script type="module" crossorigin src="./assets/index-fvcjUce9.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CP6W9tWQ.css">
 </head>
 <body>
   <!-- Entry Splash -->
@@ -88,34 +88,52 @@
         <button type="button" class="type-btn" id="btnPut">📉 PUT 看跌</button>
       </div>
       <div class="control-center">
-        <label>本金 (USDT)</label>
-        <input type="number" id="notionalInput" value="100000" min="100" step="100" class="notional-input" />
-        <label>目标到期(天)</label>
-        <input type="number" id="targetDays" value="1" min="1" max="90" step="1" />
-        <label>目标价格</label>
-        <input type="number" id="targetPrice" value="" min="1000" step="100" placeholder="可选" />
-        <label class="lock-toggle">
-          <input type="checkbox" id="lockTarget" />
-          <span>锁定目标</span>
-        </label>
-        <label>排序</label>
-        <select id="sortBySelect">
-          <option value="spread">按价差</option>
-          <option value="apy">按期权APY</option>
-          <option value="distance">按执行价距离</option>
-        </select>
-        <label>价内外</label>
-        <select id="moneynessSelect">
-          <option value="ALL">全部</option>
-          <option value="ATM">近平值</option>
-          <option value="OTM">虚值</option>
-        </select>
-        <label>最小流动性</label>
-        <input type="number" id="minLiquidityInput" value="0" min="0" step="1" />
-        <label>最小期权APY%</label>
-        <input type="number" id="minOptionAprInput" value="0" min="0" step="0.1" />
-        <label>最大抽水率%</label>
-        <input type="number" id="maxTakeRateInput" value="100" min="0" max="100" step="1" />
+        <div class="control-item">
+          <label for="notionalInput">本金 (USDT)</label>
+          <input type="number" id="notionalInput" value="100000" min="100" step="100" class="notional-input" />
+        </div>
+        <div class="control-item control-item-sm">
+          <label for="targetDays">目标到期(天)</label>
+          <input type="number" id="targetDays" value="1" min="1" max="90" step="1" />
+        </div>
+        <div class="control-item">
+          <label for="targetPrice">目标价格</label>
+          <input type="number" id="targetPrice" value="" min="1000" step="100" placeholder="可选" />
+        </div>
+        <div class="control-item control-item-lock">
+          <label class="lock-toggle" for="lockTarget">
+            <input type="checkbox" id="lockTarget" />
+            <span>锁定目标</span>
+          </label>
+        </div>
+        <div class="control-item">
+          <label for="sortBySelect">排序</label>
+          <select id="sortBySelect">
+            <option value="spread">按价差</option>
+            <option value="apy">按期权APY</option>
+            <option value="distance">按执行价距离</option>
+          </select>
+        </div>
+        <div class="control-item">
+          <label for="moneynessSelect">价内外</label>
+          <select id="moneynessSelect">
+            <option value="ALL">全部</option>
+            <option value="ATM">近平值</option>
+            <option value="OTM">虚值</option>
+          </select>
+        </div>
+        <div class="control-item control-item-sm">
+          <label for="minLiquidityInput">最小流动性</label>
+          <input type="number" id="minLiquidityInput" value="0" min="0" step="1" />
+        </div>
+        <div class="control-item control-item-sm">
+          <label for="minOptionAprInput">最小期权APY%</label>
+          <input type="number" id="minOptionAprInput" value="0" min="0" step="0.1" />
+        </div>
+        <div class="control-item control-item-sm">
+          <label for="maxTakeRateInput">最大抽水率%</label>
+          <input type="number" id="maxTakeRateInput" value="100" min="0" max="100" step="1" />
+        </div>
       </div>
       <div class="control-right">
         <button type="button" class="export-btn" id="exportBtn" disabled title="导出CSV (E)">💾 导出</button>

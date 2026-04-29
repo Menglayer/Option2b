@@ -430,20 +430,59 @@ h1 {
 .control-center,
 .control-right {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 10px;
 }
 .control-center {
-  flex-wrap: wrap;
-  row-gap: 8px;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+  gap: 10px;
+  align-items: end;
 }
 .control-right { margin-left: auto; }
 
-#targetDays { width: 84px; }
-#targetPrice { width: 128px; }
-#minLiquidityInput { width: 92px; }
-#minOptionAprInput { width: 110px; }
-#maxTakeRateInput { width: 108px; }
+.control-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.control-item label {
+  margin-bottom: 6px;
+  line-height: 1.2;
+  min-height: 16px;
+}
+
+.control-item input,
+.control-item select {
+  width: 100%;
+  min-height: 38px;
+}
+
+.control-item-sm {
+  max-width: 150px;
+}
+
+.control-item-lock {
+  justify-content: center;
+}
+
+.control-item-lock .lock-toggle {
+  margin-left: 0;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 10px;
+  background: var(--surface);
+}
+
+#targetDays { width: 100%; }
+#targetPrice { width: 100%; }
+#minLiquidityInput { width: 100%; }
+#minOptionAprInput { width: 100%; }
+#maxTakeRateInput { width: 100%; }
 
 .lock-toggle {
   display: inline-flex;
@@ -1215,6 +1254,8 @@ tbody tr:hover {
 @media (max-width: 980px) {
   .control-bar { align-items: flex-start; }
   .control-left, .control-center, .control-right { width: 100%; }
+  .control-center { grid-template-columns: repeat(3, minmax(120px, 1fr)); }
+  .control-item-sm { max-width: none; }
   .control-right { justify-content: flex-start; }
   .update-info-col { display: flex; gap: 8px; flex-wrap: wrap; }
   .summary-row { grid-template-columns: repeat(2, 1fr); }
@@ -1226,6 +1267,7 @@ tbody tr:hover {
 
 @media (max-width: 720px) {
   .header-top { flex-direction: column; align-items: flex-start; }
+  .control-center { grid-template-columns: repeat(2, minmax(130px, 1fr)); }
   .control-right { margin-left: 0; }
   .oracle-drawer { width: 100vw; }
   h1 { font-size: 24px; }
