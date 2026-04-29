@@ -80,31 +80,53 @@
       </div>
     </header>
 
-    <!-- Control Bar -->
-    <section class="control-bar">
-      <div class="control-left">
-        <button type="button" class="type-btn active" id="btnCall">📈 CALL 看涨</button>
-        <button type="button" class="type-btn" id="btnPut">📉 PUT 看跌</button>
+    <!-- Control Panel -->
+    <section class="control-panel panel">
+      <!-- Top Row: Core Controls & Actions -->
+      <div class="control-top-row">
+        <!-- Left: Call/Put -->
+        <div class="control-left">
+          <button type="button" class="type-btn active" id="btnCall">📈 CALL 看涨</button>
+          <button type="button" class="type-btn" id="btnPut">📉 PUT 看跌</button>
+        </div>
+        
+        <!-- Primary Inputs -->
+        <div class="control-primary-inputs">
+          <div class="control-item">
+            <label for="notionalInput">本金 (USDT)</label>
+            <input type="number" id="notionalInput" value="100000" min="100" step="100" class="notional-input" />
+          </div>
+          <div class="control-item control-item-sm">
+            <label for="targetDays">目标到期(天)</label>
+            <input type="number" id="targetDays" value="1" min="1" max="90" step="1" />
+          </div>
+          <div class="control-item">
+            <label for="targetPrice">目标价格</label>
+            <input type="number" id="targetPrice" value="" min="1000" step="100" placeholder="可选" />
+          </div>
+          <div class="control-item control-item-lock">
+            <label class="lock-toggle" for="lockTarget">
+              <input type="checkbox" id="lockTarget" />
+              <span>锁定目标</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Right: Actions -->
+        <div class="control-right">
+          <button type="button" class="export-btn" id="exportBtn" disabled title="导出CSV (E)">💾 导出</button>
+          <button type="button" class="api-toggle" id="themeToggle" data-theme="light">浅色主题</button>
+          <button type="button" class="api-toggle" id="modeToggle" data-mode="online">在线模式</button>
+          <button type="button" class="refresh-btn" id="refreshBtn" title="刷新数据 (R)">🔄 刷新</button>
+          <div class="update-info-col">
+            <span class="update-time" id="modeHint"></span>
+            <span class="update-time" id="lastUpdate"></span>
+          </div>
+        </div>
       </div>
-      <div class="control-center">
-        <div class="control-item">
-          <label for="notionalInput">本金 (USDT)</label>
-          <input type="number" id="notionalInput" value="100000" min="100" step="100" class="notional-input" />
-        </div>
-        <div class="control-item control-item-sm">
-          <label for="targetDays">目标到期(天)</label>
-          <input type="number" id="targetDays" value="1" min="1" max="90" step="1" />
-        </div>
-        <div class="control-item">
-          <label for="targetPrice">目标价格</label>
-          <input type="number" id="targetPrice" value="" min="1000" step="100" placeholder="可选" />
-        </div>
-        <div class="control-item control-item-lock">
-          <label class="lock-toggle" for="lockTarget">
-            <input type="checkbox" id="lockTarget" />
-            <span>锁定目标</span>
-          </label>
-        </div>
+
+      <!-- Bottom Row: Filters -->
+      <div class="control-filters-row">
         <div class="control-item">
           <label for="sortBySelect">排序</label>
           <select id="sortBySelect">
@@ -132,16 +154,6 @@
         <div class="control-item control-item-sm">
           <label for="maxTakeRateInput">最大抽水率%</label>
           <input type="number" id="maxTakeRateInput" value="100" min="0" max="100" step="1" />
-        </div>
-      </div>
-      <div class="control-right">
-        <button type="button" class="export-btn" id="exportBtn" disabled title="导出CSV (E)">💾 导出</button>
-        <button type="button" class="api-toggle" id="themeToggle" data-theme="light">浅色主题</button>
-        <button type="button" class="api-toggle" id="modeToggle" data-mode="online">在线模式</button>
-        <button type="button" class="refresh-btn" id="refreshBtn" title="刷新数据 (R)">🔄 刷新</button>
-        <div class="update-info-col">
-          <span class="update-time" id="modeHint"></span>
-          <span class="update-time" id="lastUpdate"></span>
         </div>
       </div>
     </section>

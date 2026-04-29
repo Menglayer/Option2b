@@ -408,7 +408,6 @@ h1 {
 .price-change.up { color: var(--green); }
 .price-change.down { color: var(--red); }
 
-.control-bar,
 .panel,
 .summary-card {
   border: 1px solid var(--line);
@@ -418,29 +417,51 @@ h1 {
   backdrop-filter: blur(10px) saturate(140%);
 }
 
-.control-bar {
+.control-panel {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px;
-  margin-bottom: 12px;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.control-top-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
   flex-wrap: wrap;
 }
-.control-left,
-.control-center,
+
+.control-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.control-primary-inputs {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
 .control-right {
   display: flex;
   align-items: flex-end;
   gap: 10px;
+  margin-left: auto;
 }
-.control-center {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
-  gap: 10px;
-  align-items: end;
+
+.control-filters-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
 }
-.control-right { margin-left: auto; }
 
 .control-item {
   display: flex;
