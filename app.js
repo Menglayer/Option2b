@@ -773,15 +773,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (n2 && (!n2.value || Number(n2.value) < 100000)) n2.value = '100000';
   state.notional = 100000;
 
-  tDays?.addEventListener('change', handleTargetsChange);
-  tPrice?.addEventListener('change', () => { validateCoreInputs(); handleTargetsChange(); });
-  document.getElementById('notionalInput')?.addEventListener('change', () => { validateCoreInputs(); recalc(); });
-  document.getElementById('lockTarget')?.addEventListener('change', onLockTargetChange);
-
   tDays?.addEventListener('change', () => {
     validateCoreInputs();
     handleTargetsChange();
   });
+  tPrice?.addEventListener('change', () => { validateCoreInputs(); handleTargetsChange(); });
+  document.getElementById('notionalInput')?.addEventListener('change', () => { validateCoreInputs(); recalc(); });
+  document.getElementById('lockTarget')?.addEventListener('change', onLockTargetChange);
 
   document.getElementById('oracleInput')?.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
