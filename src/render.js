@@ -85,6 +85,13 @@ export function renderMainTable(state) {
     if (state.moneynessFilter === 'ATM') return dist <= 3.5;
     if (state.moneynessFilter === 'OTM') return dist > 3.5;
     return true;
+  }).filter(p => {
+    const spreadPct = p.optionApr > 0 ? ((p.optionApr - p.dualApr) / p.optionApr) * 100 : 100;
+    const liq = Number.isFinite(p.liquidity) ? p.liquidity : Math.max(1, Math.round(100 - Math.abs(spreadPct - 25) * 1.6));
+    if (liq < (state.minLiquidity || 0)) return false;
+    if ((p.optionApr || 0) < (state.minOptionApr || 0)) return false;
+    if (spreadPct > (state.maxTakeRate ?? 100)) return false;
+    return true;
   });
 
   const P = pre.sort((a, b) => {
@@ -120,17 +127,19 @@ export function renderMainTable(state) {
 
     const liqScore = Math.max(1, Math.min(99, Math.round(100 - Math.abs(gapPct - 25) * 1.6)));
     const liqLabel = liqScore > 70 ? '高' : liqScore > 45 ? '中' : '低';
+    const atmDist = Math.abs(parseFloat(String(p.distance).replace('%', '').replace('+', '')) || 0);
+    const distCls = atmDist <= 3 ? 'atm-emph' : atmDist <= 7 ? 'atm-mid' : '';
 
     return `<tr onclick="this.nextElementSibling.querySelector('.row-details-wrapper').classList.toggle('expanded')" title="点击查看详情">
       <td><span class="tag ${p.tagClass}">${p.exchange}</span></td>
       <td>${p.optionType}</td>
       <td>$${p.strikePrice.toLocaleString()}</td>
-      <td class="muted">${p.distance}</td>
+      <td class="muted ${distCls}">${p.distance}</td>
       <td>${p.expiry} <span class="muted" style="font-size:11px">(${dualDays}d)</span></td>
       <td>${p.optionExpiry || p.expiry} <span class="muted" style="font-size:11px">(${optionDays}d)</span></td>
       <td class="accent">${p.dualApr.toFixed(1)}%</td>
       <td class="positive">${p.optionApr.toFixed(1)}%</td>
-      <td class="negative">${gap >= 0 ? '+' : ''}${gap.toFixed(1)}% <span class="muted">(${gapPct.toFixed(0)}%)</span></td>
+      <td class="negative"><span class="spread-chip ${gapPct > 35 ? 'high' : gapPct > 25 ? 'mid' : 'low'}">${gap >= 0 ? '+' : ''}${gap.toFixed(1)}%</span> <span class="muted">(${gapPct.toFixed(0)}%)</span></td>
       <td class="negative">$${loss.toFixed(2)}</td>
       <td><span class="tag ${liqScore > 70 ? 'green' : liqScore > 45 ? 'yellow' : 'red'}">${liqLabel} ${liqScore}</span></td>
       <td><span class="tag ${rCls}">${rating}</span></td>

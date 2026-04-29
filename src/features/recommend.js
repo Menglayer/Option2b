@@ -1,9 +1,11 @@
 export function renderRecommendations(state) {
   const container = document.getElementById('recommendGrid');
+  const explain = document.getElementById('recommendExplain');
   if (!container) return;
 
   if (!state.products || state.products.length === 0) {
     container.innerHTML = '<div class="muted center" style="grid-column: 1 / -1; padding: 20px;">暂无满足条件的推荐</div>';
+    if (explain) explain.textContent = '推荐解释：当前筛选条件下没有可用合约。';
     return;
   }
 
@@ -50,4 +52,16 @@ export function renderRecommendations(state) {
       </div>
     `;
   }).join('');
+
+  const lines = cards
+    .filter(c => c.pick)
+    .map(c => {
+      const p = c.pick;
+      const spreadPct = p.optionApr > 0 ? ((p.optionApr - p.dualApr) / p.optionApr) * 100 : 0;
+      const liq = Number.isFinite(p.liquidity) ? p.liquidity : Math.max(1, Math.round(100 - Math.abs(spreadPct - 25) * 1.6));
+      return `${c.label}: Δ≈${(p.delta || 0).toFixed(2)} · 距离${p.distance} · 流动性${liq} · 抽水率${spreadPct.toFixed(1)}%`;
+    });
+  if (explain) {
+    explain.innerHTML = `<strong>推荐解释：</strong>${lines.join(' ｜ ')}。不适用条件：流动性过低、到期与目标偏离过大、或抽水率高于你设置的上限。`;
+  }
 }

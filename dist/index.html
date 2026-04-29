@@ -16,8 +16,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <script type="module" crossorigin src="./assets/index-DDUYAh0B.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BhVH_qZy.css">
+  <script type="module" crossorigin src="./assets/index-C8h1CWeA.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-cyV9bZr6.css">
 </head>
 <body>
   <!-- Entry Splash -->
@@ -50,8 +50,8 @@
       <div class="header-top">
         <h1>2B-Options</h1>
         <div class="asset-toggle" id="assetToggle">
-          <button class="active" data-coin="BTC">BTC</button>
-          <button data-coin="ETH">ETH</button>
+          <button type="button" class="active" data-coin="BTC">BTC</button>
+          <button type="button" data-coin="ETH">ETH</button>
         </div>
         <div class="price-badge" id="priceBadge">
           <span class="price-label" id="priceCoinLabel">BTC</span>
@@ -110,6 +110,12 @@
           <option value="ATM">近平值</option>
           <option value="OTM">虚值</option>
         </select>
+        <label>最小流动性</label>
+        <input type="number" id="minLiquidityInput" value="0" min="0" step="1" />
+        <label>最小期权APY%</label>
+        <input type="number" id="minOptionAprInput" value="0" min="0" step="0.1" />
+        <label>最大抽水率%</label>
+        <input type="number" id="maxTakeRateInput" value="100" min="0" max="100" step="1" />
       </div>
       <div class="control-right">
         <button type="button" class="export-btn" id="exportBtn" disabled title="导出CSV (E)">💾 导出</button>
@@ -181,6 +187,27 @@
           <div class="sc-value yellow" id="cexTakeRate">--%</div>
         </div>
       </div>
+      <div class="summary-card">
+        <div class="sc-icon">Δ</div>
+        <div class="sc-body">
+          <div class="sc-label">组合净Delta</div>
+          <div class="sc-value blue" id="portfolioDelta">--</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="sc-icon">Θ</div>
+        <div class="sc-body">
+          <div class="sc-label">组合净Theta/日</div>
+          <div class="sc-value green" id="portfolioTheta">--</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="sc-icon">𝛎</div>
+        <div class="sc-body">
+          <div class="sc-label">组合净Vega</div>
+          <div class="sc-value yellow" id="portfolioVega">--</div>
+        </div>
+      </div>
     </section>
 
     <!-- AI Recommendation -->
@@ -191,6 +218,7 @@
       <div class="grid-3col" id="recommendGrid">
          <div class="muted center" style="grid-column: 1 / -1; padding: 20px;">正在穿透 CEX 隐藏费率，分析全网数据...</div>
       </div>
+      <div id="recommendExplain" class="calc-result" style="margin-top:12px;">推荐解释：等待数据</div>
     </section>
 
     <!-- Main Table -->
@@ -303,6 +331,7 @@
         </div>
         <button type="button" class="calc-btn" id="simCalcBtn">比较两种方案</button>
         <div id="simResult" class="calc-result"></div>
+        <div id="simRiskMetrics" class="calc-result">策略关键指标：等待计算</div>
       </section>
 
       <section class="panel">
@@ -406,9 +435,11 @@
             <option value="price_above">价格高于</option>
             <option value="price_below">价格低于</option>
             <option value="iv_above">IV 高于</option>
+            <option value="combo_iv_price">组合：IV高且接近平值</option>
           </select>
         </div>
         <div class="calc-field"><label>阈值</label><input type="number" id="alertValue" step="0.1" /></div>
+        <div class="calc-field"><label>附加阈值(可选)</label><input type="number" id="alertAuxValue" step="0.1" placeholder="如距离ATM%" /></div>
       </div>
       <button type="button" class="calc-btn" id="alertAddBtn">添加预警</button>
       <div id="alertList" class="calc-result muted">暂无预警</div>

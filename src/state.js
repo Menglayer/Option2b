@@ -25,4 +25,7 @@ export const state = {
   alerts: [],
   oracleMode: 'kb', // kb | ai
   riskFreeRate: 0.03,
+  minLiquidity: 0,
+  minOptionApr: 0,
+  maxTakeRate: 100,
 };

@@ -437,6 +437,9 @@ h1 {
 
 #targetDays { width: 84px; }
 #targetPrice { width: 128px; }
+#minLiquidityInput { width: 92px; }
+#minOptionAprInput { width: 110px; }
+#maxTakeRateInput { width: 108px; }
 
 .lock-toggle {
   display: inline-flex;
@@ -568,7 +571,7 @@ button:hover::after {
 
 .summary-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 10px;
   margin-bottom: 12px;
 }
@@ -759,6 +762,42 @@ tbody tr:hover {
 .tag.green { background: rgba(16, 185, 129, 0.1); color: var(--green); border-color: rgba(16, 185, 129, 0.3); }
 .tag.yellow { background: rgba(245, 158, 11, 0.1); color: var(--yellow); border-color: rgba(245, 158, 11, 0.3); }
 .tag.red { background: rgba(239, 68, 68, 0.1); color: var(--red); border-color: rgba(239, 68, 68, 0.3); }
+
+.atm-emph {
+  font-weight: 700;
+  color: #0f766e;
+}
+
+.atm-mid {
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.spread-chip {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-weight: 700;
+}
+
+.spread-chip.low {
+  color: var(--green);
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.28);
+}
+
+.spread-chip.mid {
+  color: var(--yellow);
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.spread-chip.high {
+  color: var(--red);
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+}
 
 .grid-2col {
   display: grid;

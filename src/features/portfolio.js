@@ -1,3 +1,5 @@
+import { greeks } from '../utils.js';
+
 const KEY = 'opt2b_portfolio_v1';
 
 export function loadPortfolio(state) {
@@ -61,4 +63,36 @@ export function renderPortfolio(state) {
       renderPortfolio(state);
     });
   });
+}
+
+export function computePortfolioGreeks(state) {
+  const spot = state.price || 0;
+  const refOption = state.options?.[0];
+  const T = Math.max(1, refOption?.expiryDays || state.targetDays || 7) / 365;
+  const vol = Math.max(0.08, Math.min(3, Number(refOption?.iv || 0.55)));
+  const r = state.riskFreeRate || 0.03;
+  let delta = 0;
+  let gamma = 0;
+  let vega = 0;
+  let theta = 0;
+
+  for (const p of state.portfolio || []) {
+    const strike = Number(p.strike) || 0;
+    const qty = Number(p.qty) || 0;
+    if (!(spot > 0 && strike > 0 && qty > 0)) continue;
+    const g = greeks({
+      S: spot,
+      K: strike,
+      T,
+      v: vol,
+      r,
+      isCall: p.type === 'CALL',
+    });
+    const sign = p.side === 'SELL' ? -1 : 1;
+    delta += sign * g.delta * qty;
+    gamma += sign * g.gamma * qty;
+    vega += sign * g.vega * qty;
+    theta += sign * g.theta * qty;
+  }
+  return { delta, gamma, vega, theta };
 }

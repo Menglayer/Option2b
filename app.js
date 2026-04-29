@@ -7,7 +7,7 @@ import { calculateProfit } from './src/features/calculator.js';
 import { renderRecommendations } from './src/features/recommend.js';
 import { toggleOracle, sendOracleMsg, setOracleAiProvider } from './src/features/oracle.js';
 import { runStrategyBuilder } from './src/features/strategy.js';
-import { loadPortfolio, addPosition, renderPortfolio } from './src/features/portfolio.js';
+import { loadPortfolio, addPosition, renderPortfolio, computePortfolioGreeks } from './src/features/portfolio.js';
 import { addAlert, renderAlerts, checkAlerts } from './src/features/alerts.js';
 import { connectDeribitWs } from './src/realtime/deribitSocket.js';
 import { greeks } from './src/utils.js';
@@ -269,10 +269,43 @@ function handleTargetsChange() {
 }
 
 function recalc() {
-  state.notional = parseFloat(document.getElementById('notionalInput').value) || 1000;
+  const n = parseFloat(document.getElementById('notionalInput').value);
+  const safe = Number.isFinite(n) ? Math.min(100000000, Math.max(100, n)) : 1000;
+  state.notional = safe;
+  document.getElementById('notionalInput').value = String(Math.round(safe));
   renderAll(state);
   renderRecommendations(state);
   updateVolatilityInsights();
+  updatePortfolioGreeksSummary();
+}
+
+function validateCoreInputs() {
+  const daysEl = document.getElementById('targetDays');
+  const priceEl = document.getElementById('targetPrice');
+  const notionalEl = document.getElementById('notionalInput');
+  if (!daysEl || !priceEl || !notionalEl) return;
+  const d = parseInt(daysEl.value || '1', 10);
+  const p = parseFloat(priceEl.value || '0');
+  const n = parseFloat(notionalEl.value || '1000');
+  const daySafe = Number.isFinite(d) ? Math.min(90, Math.max(1, d)) : 1;
+  daysEl.value = String(daySafe);
+  if (priceEl.value && (!Number.isFinite(p) || p <= 0)) {
+    priceEl.value = '';
+    toast('目标价格无效，已清空');
+  }
+  const nSafe = Number.isFinite(n) ? Math.min(100000000, Math.max(100, n)) : 1000;
+  if (nSafe !== n) toast('本金已自动修正到有效区间');
+  notionalEl.value = String(Math.round(nSafe));
+}
+
+function updatePortfolioGreeksSummary() {
+  const g = computePortfolioGreeks(state);
+  const d = document.getElementById('portfolioDelta');
+  const t = document.getElementById('portfolioTheta');
+  const v = document.getElementById('portfolioVega');
+  if (d) d.textContent = Number.isFinite(g.delta) ? g.delta.toFixed(3) : '--';
+  if (t) t.textContent = Number.isFinite(g.theta) ? g.theta.toFixed(3) : '--';
+  if (v) v.textContent = Number.isFinite(g.vega) ? g.vega.toFixed(3) : '--';
 }
 
 function reportTenorDistribution() {
@@ -549,8 +582,41 @@ function runStrategyComparison() {
       结果：<strong>${direction} $${Math.abs(gap).toFixed(2)}</strong>`;
   }
 
+  const maxProfit = Math.max(dualProfit, optionProfit);
+  const maxLoss = Math.min(0, premiumStressLoss(notional, strike, current));
+  const breakEven = state.type === 'CALL'
+    ? strike * (1 + (optionApr / 100) * (days / 365))
+    : strike * (1 - (optionApr / 100) * (days / 365));
+  const prob = estimatePop(current, strike, days, optionApr, state.type);
+  const metricsEl = document.getElementById('simRiskMetrics');
+  if (metricsEl) {
+    metricsEl.innerHTML = `
+      策略关键指标：<strong>Max Profit</strong> $${maxProfit.toFixed(2)} ·
+      <strong>Stress Loss</strong> $${maxLoss.toFixed(2)} ·
+      <strong>Breakeven</strong> $${breakEven.toFixed(0)} ·
+      <strong>POP</strong> ${prob.toFixed(1)}%
+    `;
+  }
+
   renderScenarioMatrix();
   drawPayoffCurve();
+}
+
+function premiumStressLoss(notional, strike, spot) {
+  const worstSpot = state.type === 'CALL' ? spot * 1.25 : spot * 0.75;
+  const intrinsic = state.type === 'CALL'
+    ? Math.max(0, worstSpot - strike) * (notional / Math.max(strike, 1))
+    : Math.max(0, strike - worstSpot) * (notional / Math.max(strike, 1));
+  const premium = notional * 0.01;
+  return premium - intrinsic;
+}
+
+function estimatePop(spot, strike, days, apr, type) {
+  const t = Math.max(1, days) / 365;
+  const iv = Math.max(0.12, Math.min(2.4, apr / 100));
+  const z = Math.abs((strike - spot) / Math.max(spot * iv * Math.sqrt(t), 1));
+  const base = Math.max(5, Math.min(95, 72 - z * 22));
+  return type === 'CALL' ? base : Math.max(5, Math.min(95, base + 3));
 }
 
 function setupUxMotion() {
@@ -635,6 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('pfAddBtn')?.addEventListener('click', () => {
     if (addPosition(state)) {
       renderPortfolio(state);
+      updatePortfolioGreeksSummary();
       toast('持仓已添加');
     } else {
       toast('请先填写完整持仓参数');
@@ -642,6 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('alertAddBtn')?.addEventListener('click', () => {
     if (addAlert(state)) {
+      checkAlerts(state, toast);
       renderAlerts(state);
       toast('预警已添加');
     } else {
@@ -660,6 +728,23 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('calcStrike')?.addEventListener('change', drawPayoffCurve);
   document.getElementById('simDays')?.addEventListener('change', renderScenarioMatrix);
   document.getElementById('simOptionApr')?.addEventListener('change', renderScenarioMatrix);
+  document.getElementById('minLiquidityInput')?.addEventListener('change', e => {
+    state.minLiquidity = Math.max(0, Number(e.target.value) || 0);
+    renderAll(state);
+    renderRecommendations(state);
+  });
+  document.getElementById('minOptionAprInput')?.addEventListener('change', e => {
+    state.minOptionApr = Math.max(0, Number(e.target.value) || 0);
+    renderAll(state);
+    renderRecommendations(state);
+  });
+  document.getElementById('maxTakeRateInput')?.addEventListener('change', e => {
+    const v = Number(e.target.value);
+    state.maxTakeRate = Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : 100;
+    e.target.value = String(state.maxTakeRate);
+    renderAll(state);
+    renderRecommendations(state);
+  });
   document.getElementById('oracleBtn')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleClose')?.addEventListener('click', toggleOracle);
   document.getElementById('oracleSend')?.addEventListener('click', sendOracleMsg);
@@ -689,9 +774,14 @@ document.addEventListener('DOMContentLoaded', () => {
   state.notional = 100000;
 
   tDays?.addEventListener('change', handleTargetsChange);
-  tPrice?.addEventListener('change', handleTargetsChange);
-  document.getElementById('notionalInput')?.addEventListener('change', recalc);
+  tPrice?.addEventListener('change', () => { validateCoreInputs(); handleTargetsChange(); });
+  document.getElementById('notionalInput')?.addEventListener('change', () => { validateCoreInputs(); recalc(); });
   document.getElementById('lockTarget')?.addEventListener('change', onLockTargetChange);
+
+  tDays?.addEventListener('change', () => {
+    validateCoreInputs();
+    handleTargetsChange();
+  });
 
   document.getElementById('oracleInput')?.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -720,6 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderPortfolio(state);
       checkAlerts(state, toast);
       renderAlerts(state);
+      updatePortfolioGreeksSummary();
     } catch {
       // noop
     }
@@ -730,5 +821,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[QA] tenor distribution =>', reportTenorDistribution());
     renderScenarioMatrix();
     drawPayoffCurve();
+    updatePortfolioGreeksSummary();
   }, 1200);
 });
